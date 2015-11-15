@@ -1,6 +1,6 @@
 {
   "name": "get-issues",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "cli that downloads all github issues from project for offline use",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "async": "^1.5.0",
-    "gh-api": "^1.0.0",
+    "git-tools": "^0.2.1",
     "request": "^2.65.0"
   }
 }
