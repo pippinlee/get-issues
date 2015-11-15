@@ -1,12 +1,12 @@
 {
   "name": "get-issues",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "cli that downloads all github issues from project for offline use",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "publish": "npm run git:add && npm run git:message && npm run git:push && npm run npm:publish",
     "git:add": "git add .",
-    "git:message": "git commit -m 'update filesize-cli' ",
+    "git:message": "git commit -m 'update gh-issues' ",
     "git:push": "git push origin master",
     "npm:publish": "npm version patch && npm publish"
   },
@@ -30,8 +30,8 @@
     "get-issues": "src/index.js"
   },
   "dependencies": {
+    "async": "^1.5.0",
     "gh-api": "^1.0.0",
-    "octonode": "^0.7.3",
     "request": "^2.65.0"
   }
 }
