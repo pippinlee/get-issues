@@ -92,7 +92,7 @@ async.waterfall([
       var issueUsername = '\nIssue filed by: ' + issue.user.login;
       var issueDate = '\n' + Date(issue.created_at);
       var issueContent = '\n\n' + issue.body;
-      var originPostBreak = '\n----------------------------------------------------------';
+      var originPostBreak = '\n-------------------------------------------------------------------------------';
 
       var finalIssue = issueTitle + issueUsername + issueDate + issueContent + originPostBreak;
 
@@ -158,7 +158,7 @@ async.waterfall([
         var commentUsername = '\n' + individualComment.user.login;
         var commentDate = '\n' + Date(individualComment.created_at);
         var commentContent = '\n\n' + individualComment.body + '\n\n';
-        var originPostBreak = '----------------------------------------------------------';
+        var originPostBreak = '-------------------------------------------------------------------------------';
 
         var commentFinal = commentUsername + commentDate + commentContent + originPostBreak;
 
