@@ -36,8 +36,8 @@ async.waterfall([
 
   // check if gh-folder needs to be created
   function init(cb) {
-    if ( !fs.existsSync('./gh-issues') ) {
-      fs.mkdirSync('./gh-issues');
+    if ( !fs.existsSync('./issues') ) {
+      fs.mkdirSync('./issues');
     }
 
     cb(null, 'gh-folder already exists');
@@ -84,11 +84,11 @@ async.waterfall([
 
   },
 
-  // create a file for each issue in /gh-issues
+  // create a file for each issue in /issues
   function createIssueFiles(filterOutPR, cb) {
     var commentsURL = [];
     filterOutPR.forEach(function(issue) {
-      var issueFilename = 'gh-issues/' + issue.number + ':' + issue.title + '.md';
+      var issueFilename = 'issues/' + issue.number + ':' + issue.title + '.md';
       var issueTitle = issue.title;
       var issueUsername = '\nIssue filed by: ' + issue.user.login;
       var issueDate = '\n' + Date(issue.created_at);
@@ -132,9 +132,9 @@ async.waterfall([
   // create obj to match issue comments and existing file
   function setupIssueComments(results, cb) {
 
-    // list of files in gh-issues
+    // list of files in /issues
     var paths = {};
-    fs.readdir('./gh-issues/', function(error, files) {
+    fs.readdir('./issues/', function(error, files) {
       if(error) {
         throw error;
       }
@@ -143,7 +143,7 @@ async.waterfall([
       // on the paths object so that we're able to easy
       // find which file comments should go
       files.forEach(function(file) {
-        paths[ file.split(':')[0] ]  = './gh-issues/' + file;
+        paths[ file.split(':')[0] ]  = './issues/' + file;
       });
 
       cb(null, paths, results);
@@ -152,7 +152,7 @@ async.waterfall([
   },
 
   // where we actually write the comments to their correct
-  // issue file in gh-issues directory
+  // issue file in /issues directory
   function writeIssueComments(paths, results, cb) {
     results.forEach(function(comment) {
       comment.forEach(function(individualComment) {
