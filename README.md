@@ -2,7 +2,7 @@
 
 If you're in the 🌳🌲🌳🌲🌳🌲🌳🌲 without a cell signal, hanging out with some grizzly 🐻 -- it might be helpful to have your github issues available locally on your laptop.
 
-![bears, beets, battlestar])(http://fat.gfycat.com/ContentLividCock.gif)
+![bears, beets, battlestar](http://fat.gfycat.com/ContentLividCock.gif)
 
 Install globally from npm with:
 
