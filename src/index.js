@@ -45,7 +45,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL(init, cb) {
-    var repo = new Repo( "../../github/Overcoat/" );
+    var repo = new Repo( "./" );
     repo.remotes(function( error, remotes) {
       if (error) {
         cb(error, null);
@@ -194,7 +194,8 @@ async.waterfall([
             return;
         }
         console.log(data);
-        console.log('\n       check your gh-issues/ for issues\n\n'.green);
+        console.log('\n    check your new issues/ directory'.green);
+        console.log('   (add issues/ to .gitignore/.npmignore)\n');
     });
   }
 );

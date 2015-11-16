@@ -4,7 +4,7 @@
   "description": "cli that downloads all github issues from project for offline use",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "publish": "npm run git:add && npm run git:message && npm run git:push && npm run npm:publish",
+    "deploy": "npm run git:add && npm run git:message && npm run git:push && npm run npm:publish",
     "git:add": "git add .",
     "git:message": "git commit -m 'update gh-issues' ",
     "git:push": "git push origin master",
