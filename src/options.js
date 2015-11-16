@@ -3,4 +3,5 @@ var colors = require('colors');
 
 program
     .option('run gh-issues in any directory to download all github issues'.yellow)
+    .version(require('../package.json').version)
     .parse(process.argv);

@@ -5,6 +5,7 @@ var Repo = require('git-tools');
 var request = require('request');
 var fs = require('fs');
 var figlet = require('figlet');
+var colors = require('colors');
 var options = require('./options');
 
 // set options for github api requests
@@ -44,7 +45,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL(init, cb) {
-    var repo = new Repo( "./" );
+    var repo = new Repo( "../../github/Overcoat/" );
     repo.remotes(function( error, remotes) {
       if (error) {
         cb(error, null);
@@ -95,6 +96,8 @@ async.waterfall([
       var originPostBreak = '\n-------------------------------------------------------------------------------';
 
       var finalIssue = issueTitle + issueUsername + issueDate + issueContent + originPostBreak;
+
+      console.log('🍕  ' + issueTitle.cyan);
 
 
       fs.writeFile(issueFilename, finalIssue, function(error) {
