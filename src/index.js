@@ -97,7 +97,7 @@ async.waterfall([
 
       var finalIssue = issueTitle + issueUsername + issueDate + issueContent + originPostBreak;
 
-      console.log('🍕  ' + issueTitle.cyan);
+      console.log('⭐️  #' + issue.number + ': ' + issueTitle.cyan);
 
 
       fs.writeFile(issueFilename, finalIssue, function(error) {
