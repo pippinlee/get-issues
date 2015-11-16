@@ -4,6 +4,8 @@ var async = require('async');
 var Repo = require('git-tools');
 var request = require('request');
 var fs = require('fs');
+var figlet = require('figlet');
+var options = require('./options');
 
 // set options for github api requests
 var options = {
@@ -34,8 +36,7 @@ async.waterfall([
   // check if gh-folder needs to be created
   function init(cb) {
     if ( !fs.existsSync('./gh-issues') ) {
-      fs.mkdirSync('gh-issues');
-      //cb(null, 'new "gh-folder" created');
+      fs.mkdirSync('./gh-issues');
     }
 
     cb(null, 'gh-folder already exists');
@@ -43,7 +44,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL(init, cb) {
-    var repo = new Repo( "../../github/react-formation/" );
+    var repo = new Repo( "./" );
     repo.remotes(function( error, remotes) {
       if (error) {
         cb(error, null);
@@ -171,7 +172,7 @@ async.waterfall([
       });
     });
 
-    cb(null, 'done writing comments');
+    cb(null, 'done writing comments'.red);
   }
 
   ],
@@ -180,6 +181,17 @@ async.waterfall([
       console.error(err);
       return;
     }
-    console.log(result);
+    figlet.text('got issues!', {
+        horizontalLayout: 'default',
+        verticalLayout: 'default'
+    }, function(err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data);
+        console.log('\n       check your gh-issues/ for issues\n\n'.green);
+    });
   }
 );
