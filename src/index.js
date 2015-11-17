@@ -6,6 +6,9 @@ var request = require('request');
 var fs = require('fs');
 var figlet = require('figlet');
 var colors = require('colors');
+var slug = require('slug');
+
+var addToGitignore = require('./addToGitignore.js');
 var options = require('./options');
 
 // set options for github api requests
@@ -39,23 +42,13 @@ async.waterfall([
     if ( !fs.existsSync('./issues') ) {
       fs.mkdirSync('./issues');
     }
-    // add /issues to .gitignore
-    if ( !fs.existsSync('.gitignore')) {
-      fs.writeFile('.gitignore', 'issues/', function (err) {
-        if (err) throw err;
-      });
-    } else if (fs.existsSync('.gitignore')) {
-      fs.appendFile('.gitignore', 'issues/', function (err) {
-        if (err) throw err;
-      });
-    }
 
     cb(null, 'gh-folder already exists');
   },
 
   // get remote github url for use with api
   function getGithubURL(init, cb) {
-    var repo = new Repo( "./" );
+    var repo = new Repo( './' );
     repo.remotes(function( error, remotes) {
       if (error) {
         cb(error, null);
@@ -98,7 +91,8 @@ async.waterfall([
   function createIssueFiles(filterOutPR, cb) {
     var commentsURL = [];
     filterOutPR.forEach(function(issue) {
-      var issueFilename = 'issues/' + issue.number + ':' + issue.title + '.md';
+      // slugify title to get rid of characters that can cause filename problems
+      var issueFilename = 'issues/' + String(issue.number) + ': ' + slug(issue.title) + '.md';
       var issueTitle = issue.title;
       var issueUsername = '\nIssue filed by: ' + issue.user.login;
       var issueDate = '\n' + Date(issue.created_at);
@@ -106,9 +100,7 @@ async.waterfall([
       var originPostBreak = '\n-------------------------------------------------------------------------------';
 
       var finalIssue = issueTitle + issueUsername + issueDate + issueContent + originPostBreak;
-
       console.log('⭐️  #' + issue.number + ': ' + issueTitle.cyan);
-
 
       fs.writeFile(issueFilename, finalIssue, function(error) {
         if(error) {
@@ -120,7 +112,6 @@ async.waterfall([
       if(issue.comments > 0) {
         commentsURL.push(issue.comments_url);
       }
-
     });
     cb(null, commentsURL);
   },
@@ -144,7 +135,7 @@ async.waterfall([
 
     // list of files in /issues
     var paths = {};
-    fs.readdir('./issues/', function(error, files) {
+    fs.readdir('issues/', function(error, files) {
       if(error) {
         throw error;
       }
@@ -153,7 +144,7 @@ async.waterfall([
       // on the paths object so that we're able to easy
       // find which file comments should go
       files.forEach(function(file) {
-        paths[ file.split(':')[0] ]  = './issues/' + file;
+        paths[ file.split(':')[0] ]  = 'issues/' + file;
       });
 
       cb(null, paths, results);
@@ -184,7 +175,6 @@ async.waterfall([
 
       });
     });
-
     cb(null, 'done writing comments'.red);
   }
 
@@ -205,7 +195,7 @@ async.waterfall([
         }
         console.log(data);
         console.log('\n    check your new issues/ directory'.green);
-        console.log('   (issues/ was added to .gitignore)\n');
+        console.log('    (issues/ was added to .gitignore)\n');
     });
   }
 );
