@@ -38,8 +38,14 @@ async.waterfall([
   function init(cb) {
     if ( !fs.existsSync('./issues') ) {
       fs.mkdirSync('./issues');
-      // add /issues to .gitignore
-      fs.appendFile('./.gitignore', '/issues', function (err) {
+    }
+    // add /issues to .gitignore
+    if ( !fs.existsSync('.gitignore')) {
+      fs.writeFile('.gitignore', 'issues/', function (err) {
+        if (err) throw err;
+      });
+    } else if (fs.existsSync('.gitignore')) {
+      fs.appendFile('.gitignore', 'issues/', function (err) {
         if (err) throw err;
       });
     }
@@ -199,7 +205,7 @@ async.waterfall([
         }
         console.log(data);
         console.log('\n    check your new issues/ directory'.green);
-        console.log('   (/issues was added to .gitignore)\n');
+        console.log('   (issues/ was added to .gitignore)\n');
     });
   }
 );
