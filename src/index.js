@@ -48,7 +48,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL(init, cb) {
-    var repo = new Repo( './' );
+    var repo = new Repo( '../react-formation/' );
     repo.remotes(function( error, remotes) {
       if (error) {
         cb(error, null);
@@ -93,14 +93,16 @@ async.waterfall([
     filterOutPR.forEach(function(issue) {
       // slugify title to get rid of characters that can cause filename problems
       var issueFilename = 'issues/' + String(issue.number) + ': ' + slug(issue.title) + '.md';
-      var issueTitle = issue.title;
-      var issueUsername = '\nIssue filed by: ' + issue.user.login;
-      var issueDate = '\n' + Date(issue.created_at);
-      var issueContent = '\n\n' + issue.body;
-      var originPostBreak = '\n-------------------------------------------------------------------------------';
 
-      var finalIssue = issueTitle + issueUsername + issueDate + issueContent + originPostBreak;
-      console.log('⭐️  #' + issue.number + ': ' + issueTitle.cyan);
+      var finalIssue = `${issue.title}
+Issue filed by: ${issue.user.login}
+${Date(issue.created_at)}
+
+${issue.body}
+-------------------------------------------------------------------------------
+`;
+
+      console.log('⭐️  #' + issue.number + ': ' + issue.title.cyan);
 
       fs.writeFile(issueFilename, finalIssue, function(error) {
         if(error) {
@@ -159,12 +161,13 @@ async.waterfall([
       comment.forEach(function(individualComment) {
 
         var writeToFile = paths[ individualComment.issue_url.split('/')[7] ];
-        var commentUsername = '\n' + individualComment.user.login;
-        var commentDate = '\n' + Date(individualComment.created_at);
-        var commentContent = '\n\n' + individualComment.body + '\n\n';
-        var originPostBreak = '-------------------------------------------------------------------------------';
+        var commentFinal = `${individualComment.user.login}
+${Date(individualComment.created_at)}
 
-        var commentFinal = commentUsername + commentDate + commentContent + originPostBreak;
+${individualComment.body}
+
+-------------------------------------------------------------------------------
+`;
 
         // append all comments to file
         fs.appendFile(writeToFile, commentFinal, function(error) {
