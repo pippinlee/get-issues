@@ -3,15 +3,16 @@
 'use strict'
 
 var async = require('async')
-var figlet = require('figlet')
-var fs = require('fs')
-var options = require('./options')
 var Repo = require('git-tools')
 var request = require('request')
+var fs = require('fs')
+var figlet = require('figlet')
 var slug = require('slug')
+var util = require('util')
+var options = require('./options')
 
-require('colors')
 require('./addToGitignore.js')
+require('colors')
 
 // set options for github api requests
 var options = {
@@ -62,7 +63,7 @@ async.waterfall([
 
   function makeApiUrl (url, cb) {
     var splitURL = url.split('/')
-    var finalURL = 'https://api.github.com/repos/' + splitURL[splitURL.length - 2] + '/' + splitURL[splitURL.length - 1].split('.')[0] + '/issues'
+    var finalURL = util.format('https://api.github.com/repos/%s/%s/issues', splitURL[splitURL.length - 2], splitURL[splitURL.length - 1].split('.')[0])
     cb(null, finalURL)
   },
 
@@ -93,7 +94,7 @@ async.waterfall([
     var commentsURL = []
     filterOutPR.forEach(function (issue) {
       // slugify title to get rid of characters that can cause filename problems
-      var issueFilename = 'issues/' + String(issue.number) + '-' + slug(issue.title) + '.md'
+      var issueFilename = util.format('issues/%s-%s.md', String(issue.number), slug(issue.title))
       // template strings use indents, to avoid indents we must forego code readability
       var finalIssue = `${issue.title}
 Issue filed by: ${issue.user.login}
@@ -103,7 +104,7 @@ ${issue.body}
 -------------------------------------------------------------------------------
 `
 
-      console.log('⭐️  #' + issue.number + ': ' + issue.title.cyan)
+      console.log('⭐️  #%s: %s', issue.number, issue.title.cyan)
 
       fs.writeFile(issueFilename, finalIssue, function (error) {
         if (error) {
