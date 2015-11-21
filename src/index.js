@@ -92,7 +92,7 @@ async.waterfall([
     var commentsURL = [];
     filterOutPR.forEach(function(issue) {
       // slugify title to get rid of characters that can cause filename problems
-      var issueFilename = 'issues/' + String(issue.number) + ': ' + slug(issue.title) + '.md';
+      var issueFilename = 'issues/' + String(issue.number) + '-' + slug(issue.title) + '.md';
 
       var finalIssue = `${issue.title}
 Issue filed by: ${issue.user.login}
@@ -146,7 +146,7 @@ ${issue.body}
       // on the paths object so that we're able to easy
       // find which file comments should go
       files.forEach(function(file) {
-        paths[ file.split(':')[0] ]  = 'issues/' + file;
+        paths[ file.split('-')[0] ]  = 'issues/' + file;
       });
 
       cb(null, paths, results);

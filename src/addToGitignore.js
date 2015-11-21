@@ -14,10 +14,7 @@ var fs = require('fs');
       if (readLines.indexOf('issues/') < 0) {
         fs.appendFile('.gitignore', '\nissues/', function (err) {
           if (err) throw err;
-          console.log('added gitignore');
         });
-      } else {
-        console.log('/issues already in gitignore');
       }
     });
   }
