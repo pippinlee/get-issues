@@ -48,7 +48,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL(init, cb) {
-    var repo = new Repo( '../react-formation/' );
+    var repo = new Repo( './' );
     repo.remotes(function( error, remotes) {
       if (error) {
         cb(error, null);
@@ -93,7 +93,7 @@ async.waterfall([
     filterOutPR.forEach(function(issue) {
       // slugify title to get rid of characters that can cause filename problems
       var issueFilename = 'issues/' + String(issue.number) + '-' + slug(issue.title) + '.md';
-
+      // template strings use indents, to avoid indents we must forego code readability
       var finalIssue = `${issue.title}
 Issue filed by: ${issue.user.login}
 ${Date(issue.created_at)}
