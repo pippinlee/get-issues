@@ -3,7 +3,7 @@
 var fs = require('fs')
 
 // add "issues/" to .gitignore
-(function () {
+;(function () {
   if (!fs.existsSync('.gitignore')) {
     fs.writeFile('.gitignore', 'issues/', function (err) {
       if (err) throw err
