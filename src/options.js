@@ -1,10 +1,9 @@
 'use strict'
 
 var program = require('commander')
-
-require('colors')
+var chalk = require('chalk')
 
 module.exports = program
   .version(require('../package.json').version)
-  .option('run get-issues in any directory to download all github issues'.yellow, '')
+  .option(chalk.yellow('run get-issues in any directory to download all github issues'), '')
   .parse(process.argv)

@@ -9,10 +9,10 @@ var fs = require('fs')
 var figlet = require('figlet')
 var slug = require('slug')
 var util = require('util')
+var chalk = require('chalk');
 var options = require('./options')
 
 require('./addToGitignore.js')
-require('colors')
 
 // set options for github api requests
 var options = {
@@ -104,7 +104,7 @@ ${issue.body}
 -------------------------------------------------------------------------------
 `
 
-      console.log('⭐️  #%s: %s', issue.number, issue.title.cyan)
+      console.log('⭐️  #%s: %s', issue.number, chalk.cyan(issue.title))
 
       fs.writeFile(issueFilename, finalIssue, function (error) {
         if (error) {
@@ -176,7 +176,7 @@ ${individualComment.body}
         })
       })
     })
-    cb(null, 'done writing comments'.red)
+    cb(null, chalk.red('done writing comments'))
   }
 
 ],
@@ -196,7 +196,7 @@ ${individualComment.body}
         return
       }
       console.log(data)
-      console.log('\n    check your new issues/ directory'.green)
+      console.log(chalk.green('\n    check your new issues/ directory'))
       console.log('    (issues/ was added to .gitignore)\n')
     })
   }
