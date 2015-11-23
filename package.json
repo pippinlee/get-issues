@@ -39,7 +39,8 @@
     "figlet": "^1.1.1",
     "git-tools": "^0.2.1",
     "request": "^2.65.0",
-    "slug": "^0.9.1"
+    "slug": "^0.9.1",
+    "ssh-url": "^0.1.5"
   },
   "devDependencies": {
     "standard": "^5.4.1"
