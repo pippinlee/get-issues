@@ -9,6 +9,8 @@ var fs = require('fs')
 var figlet = require('figlet')
 var slug = require('slug')
 var util = require('util')
+var url = require('url')
+var sshURL = require('ssh-url')
 var options = require('./options')
 
 require('./addToGitignore.js')
@@ -56,14 +58,32 @@ async.waterfall([
       if (error) {
         cb(error, null)
       }
-      var url = remotes[0].url
-      cb(null, url)
+      var remoteURL = remotes[0].url
+      cb(null, remoteURL)
     })
   },
 
-  function makeApiUrl (url, cb) {
-    var splitURL = url.split('/')
-    var finalURL = util.format('https://api.github.com/repos/%s/%s/issues', splitURL[splitURL.length - 2], splitURL[splitURL.length - 1].split('.')[0])
+  function makeApiUrl (remoteURL, cb) {
+    var parsedURL = url.parse(remoteURL)
+
+    // handle ssh remote URL
+    if (!parsedURL.protocol) {
+      parsedURL = sshURL.parse(remoteURL)
+      var finalURL = url.format({
+        protocol: 'https',
+        host: util.format('api.%s', parsedURL.hostname),
+        pathname: `repos${parsedURL.pathname.split('.')[0]}/issues`
+      })
+    } else {
+      // handle https remote URL
+      var splitURL = parsedURL.pathname.split('/')
+      var finalURL = url.format({
+        protocol: parsedURL.protocol,
+        host: util.format('api.%s', parsedURL.host),
+        pathname: `/repos/${splitURL[1]}/${splitURL[2].split('.')[0]}/issues`
+      })
+    }
+
     cb(null, finalURL)
   },
 
