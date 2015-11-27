@@ -25,12 +25,6 @@ require('./addToGitignore.js')
 require('colors')
 
 // set options for github api requests
-var options = {
-  headers: {
-    'User-Agent': 'request'
-  }
-}
-
 var callURL = function (url, cb) {
   var options = {
     url: url,
@@ -62,7 +56,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL (init, cb) {
-    var repo = new Repo(__dirname)
+    var repo = new Repo('../bear-safety/')
     repo.remotes(function ( error, remotes) {
       if (error) {
         cb(error, null)
@@ -160,7 +154,7 @@ async.waterfall([
         {
           type: "input",
           name: "token",
-          message: "https://github.com/settings/tokens/new?scopes=repo&description=get%20issues%20CLI".red.underline +  "\n\n  This token will be stored locally for future use. \n  Use above link to create a github access token and paste it here: "
+          message: "https://github.com/settings/tokens/new?scopes=repo&description=get%20issues%20CLI".red.underline + "\n\n ⎔".magenta + " Click above link to create a Github access token" + "\n\n ⎔".magenta + " Leave \"scope\" options as is, and click \"Generate token\" " + "\n\n ⎔".magenta + " This token will be stored locally and used whenever accessing a private repo" + "\n\n ⎔".magenta + " Paste token here:"
         }
       ]
       // get user to past github activity token with "repo" privileges
@@ -315,7 +309,7 @@ ${individualComment.body}
       console.error(err)
       return
     }
-    // fancy ouput
+    // fancy output
     figlet.text('got issues!', {
       horizontalLayout: 'default',
       verticalLayout: 'default'
