@@ -25,6 +25,13 @@ require('./addToGitignore.js')
 require('colors')
 
 // set options for github api requests
+var options = {
+  headers: {
+    'User-Agent': 'request'
+  }
+}
+
+// set options for github api requests
 var callURL = function (url, cb) {
   var options = {
     url: url,
@@ -56,7 +63,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL (init, cb) {
-    var repo = new Repo('../bear-safety/')
+    var repo = new Repo(__dirname)
     repo.remotes(function ( error, remotes) {
       if (error) {
         cb(error, null)
