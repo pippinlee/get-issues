@@ -38,6 +38,8 @@
     "commander": "^2.9.0",
     "figlet": "^1.1.1",
     "git-tools": "^0.2.1",
+    "github": "^0.2.4",
+    "inquirer": "^0.11.0",
     "request": "^2.65.0",
     "slug": "^0.9.1",
     "ssh-url": "^0.1.5"
