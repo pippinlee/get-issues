@@ -1,6 +1,6 @@
 {
   "name": "get-issues",
-  "version": "1.0.8",
+  "version": "1.2.0",
   "description": "cli that downloads all github issues from project for offline use",
   "scripts": {
     "pretest": "standard",
@@ -38,6 +38,8 @@
     "commander": "^2.9.0",
     "figlet": "^1.1.1",
     "git-tools": "^0.2.1",
+    "github": "^0.2.4",
+    "inquirer": "^0.11.0",
     "request": "^2.65.0",
     "slug": "^0.9.1",
     "ssh-url": "^0.1.5"

@@ -5,13 +5,21 @@
 var async = require('async')
 var Repo = require('git-tools')
 var request = require('request')
-var fs = require('fs')
+var fs = require('fs-extra')
 var figlet = require('figlet')
 var slug = require('slug')
 var util = require('util')
 var url = require('url')
 var sshURL = require('ssh-url')
 var options = require('./options')
+var inquirer = require('inquirer')
+var github = new (require('github'))({version: '3.0.0'})
+var os = require('os')
+var path = require('path')
+
+// attempt at a platform agnostic place to store auth tokens
+var configDir = path.resolve(os.homedir(), '.config' , 'get-issues')
+var configFile = path.resolve(configDir, 'setup.json')
 
 require('./addToGitignore.js')
 require('colors')
@@ -23,6 +31,7 @@ var options = {
   }
 }
 
+// set options for github api requests
 var callURL = function (url, cb) {
   var options = {
     url: url,
@@ -40,9 +49,10 @@ var callURL = function (url, cb) {
   request(options, callback)
 }
 
+
 async.waterfall([
 
-  // check if gh-folder needs to be created
+  // check if /issues folder needs to be created
   function init (cb) {
     if (!fs.existsSync('./issues')) {
       fs.mkdirSync('./issues')
@@ -53,7 +63,7 @@ async.waterfall([
 
   // get remote github url for use with api
   function getGithubURL (init, cb) {
-    var repo = new Repo('./')
+    var repo = new Repo(__dirname)
     repo.remotes(function ( error, remotes) {
       if (error) {
         cb(error, null)
@@ -65,6 +75,7 @@ async.waterfall([
 
   function makeApiUrl (remoteURL, cb) {
     var parsedURL = url.parse(remoteURL)
+    var currentRepoInfo = {}
 
     // handle ssh remote URL
     if (!parsedURL.protocol) {
@@ -74,6 +85,8 @@ async.waterfall([
         host: util.format('api.%s', parsedURL.hostname),
         pathname: `repos${parsedURL.pathname.split('.')[0]}/issues`
       })
+      currentRepoInfo.username = parsedURL.pathname.split('/')[1]
+      currentRepoInfo.repo = path.basename(remoteURL, '.git')
     } else {
       // handle https remote URL
       var splitURL = parsedURL.pathname.split('/')
@@ -82,17 +95,23 @@ async.waterfall([
         host: util.format('api.%s', parsedURL.host),
         pathname: `/repos/${splitURL[1]}/${splitURL[2].split('.')[0]}/issues`
       })
+      currentRepoInfo.username = parsedURL.pathname.split('/')[1]
+      currentRepoInfo.repo = path.basename(remoteURL, '.git')
     }
 
-    cb(null, finalURL)
+    cb(null, finalURL, currentRepoInfo)
   },
 
   // make request to remote repo's issue page
-  function getIssues (finalURL, cb) {
+  function getIssues (finalURL, currentRepoInfo, cb) {
+
     options.url = finalURL
     function callback (error, response, body) {
       if (error) {
         cb(error, null)
+      }
+      if (!error && response.statusCode !== 200 ) {
+        cb(error, 'invalid repo', currentRepoInfo)
       }
       if (!error && response.statusCode === 200) {
         var info = JSON.parse(body)
@@ -102,20 +121,112 @@ async.waterfall([
             filterOutPR.push(issue)
           }
         })
-        cb(null, filterOutPR)
+        cb(null, filterOutPR, currentRepoInfo)
       }
     }
 
     request(options, callback)
   },
 
+  // if repo is private, checks for github auth token
+  function checkIfPrivateRepo (filterOutPR, currentRepoInfo, cb) {
+
+    if (filterOutPR === 'invalid repo') {
+      // let's check if this token already exits
+      fs.readJSON(configFile, function(err, obj) {
+          if (err) {
+            var tokenCheck = true
+            // no token found
+            cb(null, filterOutPR, tokenCheck, currentRepoInfo)
+          } else {
+            var tokenCheck = obj.token
+            // found token that exits already
+            cb(null, filterOutPR, tokenCheck, currentRepoInfo)
+          }
+        })
+    } else if (filterOutPR) {
+      var tokenCheck = false
+      cb(null, filterOutPR, tokenCheck, currentRepoInfo)
+    }
+  },
+
+  // if token is need and doesn't exists create it
+  function getTokenIfNeeded(filterOutPR, tokenCheck, currentRepoInfo, cb) {
+    var tokenFinal
+
+    // if tokenCheck is true, need to get token prompts user
+    if (tokenCheck === true){
+      // it's a private repo
+      var questions = [
+        {
+          type: "input",
+          name: "token",
+          message: "https://github.com/settings/tokens/new?scopes=repo&description=get%20issues%20CLI".red.underline + "\n\n ⎔".magenta + " Click above link to create a Github access token" + "\n\n ⎔".magenta + " Leave \"scope\" options as is, and click \"Generate token\" " + "\n\n ⎔".magenta + " This token will be stored locally and used whenever accessing a private repo" + "\n\n ⎔".magenta + " Paste token here:"
+        }
+      ]
+      // get user to past github activity token with "repo" privileges
+      inquirer.prompt( questions, function( answers ) {
+        var tokenFinal = answers.token
+        fs.outputJSON(configFile, {token: tokenFinal}, function(err){
+          if (err) throw err
+          cb(null, tokenFinal, filterOutPR, currentRepoInfo)
+        })
+      })
+    } else if (!tokenCheck) {
+      // not private repo, no auth needed
+      tokenFinal = 'public'
+      cb(null, tokenFinal, filterOutPR, currentRepoInfo)
+    } else {
+      // token already exists, just read it
+      tokenFinal = tokenCheck
+      cb(null, tokenFinal, filterOutPR, currentRepoInfo)
+    }
+
+  },
+
+  function githubAuthIfNeed(tokenFinal, filterOutPR, currentRepoInfo, cb) {
+
+    // skip github auth if public repo
+    if (tokenFinal === 'public') {
+      cb(null, filterOutPR)
+    } else if (tokenFinal) {
+
+      github.authenticate({
+          type: "oauth",
+          token: tokenFinal
+      })
+      github.issues.repoIssues({
+          user: currentRepoInfo.username,
+          repo: currentRepoInfo.repo,
+          state: 'open',
+          per_page: 100
+      }, function(err, res) {
+          if (err) {
+            // bad credentials
+            fs.remove(configFile, function(err){if (err) throw err})
+          } else {
+            // good credentials
+            var filterOutPR = []
+
+            res.forEach(function (issue) {
+              if (!issue.pull_request) {
+                filterOutPR.push(issue)
+              }
+            })
+            cb(null, filterOutPR)
+          }
+      })
+    }
+  },
+
   // create a file for each issue in /issues
   function createIssueFiles (filterOutPR, cb) {
+
     var commentsURL = []
     filterOutPR.forEach(function (issue) {
       // slugify title to get rid of characters that can cause filename problems
       var issueFilename = util.format('issues/%s-%s.md', String(issue.number), slug(issue.title))
-      // template strings use indents, to avoid indents we must forego code readability
+      // template strings use indents, to avoid indents we must forgo code readability
       var finalIssue = `${issue.title}
 Issue filed by: ${issue.user.login}
 ${Date(issue.created_at)}
@@ -205,7 +316,7 @@ ${individualComment.body}
       console.error(err)
       return
     }
-
+    // fancy output
     figlet.text('got issues!', {
       horizontalLayout: 'default',
       verticalLayout: 'default'

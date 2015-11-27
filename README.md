@@ -14,7 +14,9 @@ Works best if you view with markdown plugin or markdown viewer because the conte
 
 npm: [npmjs.com/package/get-issues](https://www.npmjs.com/package/get-issues)
 
-## work in progress
 
-* this project is still new, so private repos won't work currently
-* `get-issues` uses the https git remote url to find issues, so if your remote origin uses ssh, it won't work, yet!
+✅ works with public github repos
+✅ works with private repos with Github's access tokens
+❎ will soon work with github's 2-factor-authentication
+✅ works with ssh or https remote github URLs
+✅ works great when used in conjunction with `npm scripts`, using a `post-install` script
