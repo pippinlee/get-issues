@@ -37,6 +37,7 @@
     "colors": "^1.1.2",
     "commander": "^2.9.0",
     "figlet": "^1.1.1",
+    "fs-extra": "^0.26.2",
     "git-tools": "^0.2.1",
     "github": "^0.2.4",
     "inquirer": "^0.11.0",
