@@ -16,7 +16,11 @@ npm: [npmjs.com/package/get-issues](https://www.npmjs.com/package/get-issues)
 
 
 ✅ works with public github repos
+
 ✅ works with private repos with Github's access tokens
+
 ❎ will soon work with github's 2-factor-authentication
+
 ✅ works with ssh or https remote github URLs
+
 ✅ works great when used in conjunction with `npm scripts`, using a `post-install` script
