@@ -2,28 +2,31 @@
 
 'use strict';
 
+// INFO: Node Modules
 var util = require('util');
 var url = require('url');
 var os = require('os');
 var path = require('path');
 
+// INFO: NPM Modules
 var async = require('async');
 var Repo = require('git-tools');
-var github = new (require('github'))({version: '3.0.0'});
 var request = require('request');
 var fs = require('fs-extra');
 var figlet = require('figlet');
 var slugFactory = require('urlify');
-var sshURL = require('ssh-url');
-var options = require('./options');
+var scpUrl = require('ssh-url');
+// var options = require('./options');
 var inquirer = require('inquirer');
 var colors = require('colors');
+
+// INFO: src modules
+var config = require('./config');
+var github = config.github;
 
 // INFO: attempt at a platform agnostic place to store auth tokens
 var configDir = path.resolve(os.homedir(), '.config' , 'get-issues');
 var configFile = path.resolve(configDir, 'setup.json');
-
-var addToGitIgnore = require('./addToGitignore.js')();
 
 // INFO: set options for slug config
 var slugOptions = {
@@ -42,13 +45,7 @@ var slugOptions = {
 var slug = slugFactory.create(slugOptions);
 
 // INFO: set options for github api requests
-var options = {
-  headers: {
-    'User-Agent': 'request'
-  }
-};
-
-// INFO: set options for github api requests
+// NOTE: is this useful?
 var callURL = function (url, cb) {
   var options = {
     url: url,
@@ -57,7 +54,7 @@ var callURL = function (url, cb) {
     }
   };
 
-  function callback (error, response, body) {
+  function callback(error, response, body) {
     if (!error && response.statusCode === 200) {
       var info = JSON.parse(body);
       cb(null, info);
@@ -70,60 +67,72 @@ var callURL = function (url, cb) {
 async.waterfall([
 
   // INFO: check if /issues folder needs to be created
-  function init (cb) {
-    if (!fs.existsSync('./issues')) {
-      fs.mkdirSync('./issues');
-    }
-
-    cb(null, 'gh-folder already exists');
+  function init(cb) {
+    var dir = './issues';
+    fs.ensureDir(dir, function(err) {
+      if (err) {
+        throw err;
+      } else {
+        config.checkGitIgnore();
+        cb(null);
+      }
+    });
   },
 
   // INFO: get remote github url for use with api
-  function getGithubURL (init, cb) {
+  function getGithubRemoteUrl(cb) {
     var repo = new Repo(__dirname);
     repo.remotes(function (error, remotes) {
       if (error) {
         cb(error, null);
+      } else {
+        var remoteUrl = remotes[0].url;
+        cb(null, remoteUrl);
       }
-      var remoteURL = remotes[0].url;
-      cb(null, remoteURL);
     });
   },
 
-  function makeApiUrl (remoteURL, cb) {
-    var parsedURL = url.parse(remoteURL);
-    var currentRepoInfo = {};
+  function makeApiUri(remoteUrl, cb) {
 
-    // INFO: handle ssh remote URL
-    if (!parsedURL.protocol) {
-      parsedURL = sshURL.parse(remoteURL);
-      var finalURL = url.format({
-        protocol: 'https',
-        host: util.format('api.%s', parsedURL.hostname),
-        pathname: `repos${parsedURL.pathname.split('.')[0]}/issues`
-      });
-      currentRepoInfo.username = parsedURL.pathname.split('/')[1];
-      currentRepoInfo.repo = path.basename(remoteURL, '.git');
+    // TEST: force the url to w/e I want
+    // remoteURL = 'username@github.com:repo-user/repo-name.git';
+    var parsedUrl = url.parse(remoteUrl);
+    var currentRepoInfo = {};
+    var uri = '';
+
+    console.log('parsedUrl', parsedUrl.protocol);
+
+    // INFO: handle scp-like syntax ssh protocol in remote url
+    if (parsedUrl.protocol === null) {
+      parsedUrl = scpUrl.parse(remoteUrl);
+      uri = 'repos' + parsedUrl.pathname.split('.')[0] + '/issues';
+      currentRepoInfo.username = parsedUrl.pathname.split('/')[1];
+      currentRepoInfo.repo = path.basename(remoteUrl, '.git');
     } else {
-      // INFO: handle https remote URL
-      var splitURL = parsedURL.pathname.split('/');
-      var finalURL = url.format({
-        protocol: parsedURL.protocol,
-        host: util.format('api.%s', parsedURL.host),
-        pathname: `/repos/${splitURL[1]}/${splitURL[2].split('.')[0]}/issues`
-      });
-      currentRepoInfo.username = parsedURL.pathname.split('/')[1];
-      currentRepoInfo.repo = path.basename(remoteURL, '.git');
+
+      // INFO: handle regular https remote URL
+      var splitURL = parsedUrl.pathname.split('.');
+      uri = 'repos' + splitURL[0] + '/issues';
+      currentRepoInfo.username = parsedUrl.pathname.split('/')[1];
+      currentRepoInfo.repo = path.basename(remoteUrl, '.git');
     }
 
-    cb(null, finalURL, currentRepoInfo);
+    // TEST: check if uri is correct
+    console.log('uri', uri);
+    console.log('currentRepoInfo', currentRepoInfo);
+    cb(null, uri, currentRepoInfo);
   },
 
   // INFO: make request to remote repo's issue page
-  function getIssues (finalURL, currentRepoInfo, cb) {
+  function getIssues (uri, currentRepoInfo, cb) {
 
-    options.url = finalURL;
+    var options = config.genReqObj(uri);
+
+    // TEST: check gen function
+    console.log('genReqObj', options);
+
     function callback (error, response, body) {
+      process.exit();
       if (error) {
         cb(error, null);
       }
@@ -173,6 +182,7 @@ async.waterfall([
 
     // INFO: if tokenCheck is true, need to get token prompts user
     if (tokenCheck === true){
+
       // INFO: it's a private repo
       var questions = [
         {
