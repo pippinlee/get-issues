@@ -2,27 +2,28 @@
 
 'use strict';
 
+var util = require('util');
+var url = require('url');
+var os = require('os');
+var path = require('path');
+
 var async = require('async');
 var Repo = require('git-tools');
+var github = new (require('github'))({version: '3.0.0'});
 var request = require('request');
 var fs = require('fs-extra');
 var figlet = require('figlet');
 var slugFactory = require('urlify');
-var util = require('util');
-var url = require('url');
 var sshURL = require('ssh-url');
 var options = require('./options');
 var inquirer = require('inquirer');
-var github = new (require('github'))({version: '3.0.0'});
-var os = require('os');
-var path = require('path');
+var colors = require('colors');
 
 // INFO: attempt at a platform agnostic place to store auth tokens
 var configDir = path.resolve(os.homedir(), '.config' , 'get-issues');
 var configFile = path.resolve(configDir, 'setup.json');
 
-require('./addToGitignore.js');
-require('colors');
+var addToGitIgnore = require('./addToGitignore.js')();
 
 // INFO: set options for slug config
 var slugOptions = {
