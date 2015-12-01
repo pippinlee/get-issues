@@ -57,5 +57,9 @@ module.exports = {
       }
     });
   },
-  github: github
+  github: github,
+  curRepoInfo: {
+    username: '',
+    repo: ''
+  }
 };
