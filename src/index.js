@@ -128,27 +128,16 @@ async.waterfall([
 
   // INFO: make request to remote repo's issue page
   function getIssues(uri, currentRepoInfo, cb) {
-
-    // TODO: rename this var
-    var options = config.genReqObj(uri);
-
-    // TEST: check gen function
-    console.log('genReqObj', options);
-
-
-    // TODO: figure out a better way to keep this
-    function callback (error, response, body) {
+    var reqOptions = config.genReqObj(uri);
+    request(reqOptions, function getIssuesReq(error, response, body) {
       if (error) { cb(error, null); }
-      if (!error && response.statusCode !== 200 ) {
+      if (!error && response.statusCode !== 200) {
 
         // TODO: remove currentRepoInfo from callback
         cb(error, 'invalid repo', currentRepoInfo);
       }
       if (!error && response.statusCode === 200) {
         var info = JSON.parse(body);
-
-        // TEST: check result from request
-        console.log('info', info);
         var processIssues = function(item, callback) {
           if (!item.pull_request) {
             callback(true);
@@ -157,18 +146,10 @@ async.waterfall([
           }
         };
         async.filter(info, processIssues, function(filteredIssues) {
-
-          // TEST: check filtered results
-          console.log('results async filter', filteredIssues);
-
-          // TODO: remove currentRepoInfo from callback
           cb(null, filteredIssues, currentRepoInfo);
         });
       }
-    }
-
-    // TODO: RE: todo above, figure out how to call this better
-    request(options, callback);
+    });
   },
 
   // INFO: if repo is private, checks for github auth token
