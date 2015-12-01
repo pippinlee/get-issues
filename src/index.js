@@ -135,6 +135,8 @@ async.waterfall([
     // TEST: check gen function
     console.log('genReqObj', options);
 
+
+    // TODO: figure out a better way to keep this
     function callback (error, response, body) {
       if (error) { cb(error, null); }
       if (!error && response.statusCode !== 200 ) {
@@ -144,19 +146,28 @@ async.waterfall([
       }
       if (!error && response.statusCode === 200) {
         var info = JSON.parse(body);
-        console.log('info', info);
 
-        process.exit(12);
-        var filterOutPR = [];
-        info.forEach(function (issue) {
-          if (!issue.pull_request) {
-            filterOutPR.push(issue);
+        // TEST: check result from request
+        console.log('info', info);
+        var processIssues = function(item, callback) {
+          if (!item.pull_request) {
+            callback(true);
+          } else {
+            callback(false);
           }
+        };
+        async.filter(info, processIssues, function(filteredIssues) {
+
+          // TEST: check filtered results
+          console.log('results async filter', filteredIssues);
+
+          // TODO: remove currentRepoInfo from callback
+          cb(null, filteredIssues, currentRepoInfo);
         });
-        cb(null, filterOutPR, currentRepoInfo);
       }
     }
 
+    // TODO: RE: todo above, figure out how to call this better
     request(options, callback);
   },
 
