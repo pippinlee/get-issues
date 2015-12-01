@@ -12,7 +12,7 @@ var path = require('path');
 var async = require('async');
 var Repo = require('git-tools');
 var request = require('request');
-var fs = require('fs-extra');
+var fse = require('fs-extra');
 var figlet = require('figlet');
 var slugFactory = require('urlify');
 var scpUrl = require('ssh-url');
@@ -69,7 +69,7 @@ async.waterfall([
   // INFO: check if /issues folder needs to be created
   function init(cb) {
     var dir = './issues';
-    fs.ensureDir(dir, function(err) {
+    fse.ensureDir(dir, function(err) {
       if (err) {
         throw err;
       } else {
@@ -100,47 +100,53 @@ async.waterfall([
     var currentRepoInfo = {};
     var uri = '';
 
+    // TEST: check actual value
     console.log('parsedUrl', parsedUrl.protocol);
 
     // INFO: handle scp-like syntax ssh protocol in remote url
     if (parsedUrl.protocol === null) {
       parsedUrl = scpUrl.parse(remoteUrl);
       uri = 'repos' + parsedUrl.pathname.split('.')[0] + '/issues';
-      currentRepoInfo.username = parsedUrl.pathname.split('/')[1];
-      currentRepoInfo.repo = path.basename(remoteUrl, '.git');
+      config.curRepoInfo.username = parsedUrl.pathname.split('/')[1];
+      config.curRepoInfo.repo = path.basename(remoteUrl, '.git');
     } else {
 
       // INFO: handle regular https remote URL
       var splitURL = parsedUrl.pathname.split('.');
       uri = 'repos' + splitURL[0] + '/issues';
-      currentRepoInfo.username = parsedUrl.pathname.split('/')[1];
-      currentRepoInfo.repo = path.basename(remoteUrl, '.git');
+      config.curRepoInfo.username = parsedUrl.pathname.split('/')[1];
+      config.curRepoInfo.repo = path.basename(remoteUrl, '.git');
     }
 
     // TEST: check if uri is correct
     console.log('uri', uri);
     console.log('currentRepoInfo', currentRepoInfo);
+
+    // TODO: remove currentRepoInfo from callback
     cb(null, uri, currentRepoInfo);
   },
 
   // INFO: make request to remote repo's issue page
-  function getIssues (uri, currentRepoInfo, cb) {
+  function getIssues(uri, currentRepoInfo, cb) {
 
+    // TODO: rename this var
     var options = config.genReqObj(uri);
 
     // TEST: check gen function
     console.log('genReqObj', options);
 
     function callback (error, response, body) {
-      process.exit();
-      if (error) {
-        cb(error, null);
-      }
+      if (error) { cb(error, null); }
       if (!error && response.statusCode !== 200 ) {
+
+        // TODO: remove currentRepoInfo from callback
         cb(error, 'invalid repo', currentRepoInfo);
       }
       if (!error && response.statusCode === 200) {
         var info = JSON.parse(body);
+        console.log('info', info);
+
+        process.exit(12);
         var filterOutPR = [];
         info.forEach(function (issue) {
           if (!issue.pull_request) {
@@ -159,7 +165,7 @@ async.waterfall([
 
     if (filterOutPR === 'invalid repo') {
       // INFO: let's check if this token already exits
-      fs.readJSON(configFile, function(err, obj) {
+      fse.readJSON(configFile, function(err, obj) {
           if (err) {
             var tokenCheck = true;
             // INFO: no token found
@@ -194,7 +200,7 @@ async.waterfall([
       // INFO: get user to past github activity token with "repo" privileges
       inquirer.prompt( questions, function( answers ) {
         var tokenFinal = answers.token;
-        fs.outputJSON(configFile, {token: tokenFinal}, function(err){
+        fse.outputJSON(configFile, {token: tokenFinal}, function(err){
           if (err) throw err
           cb(null, tokenFinal, filterOutPR, currentRepoInfo);
         });
@@ -230,7 +236,7 @@ async.waterfall([
       }, function(err, res) {
           if (err) {
             // INFO: bad credentials
-            fs.remove(configFile, function(err){if (err) throw err});
+            fse.remove(configFile, function(err){if (err) throw err});
           } else {
             // INFO: good credentials
             var filterOutPR = [];
@@ -267,7 +273,7 @@ ${issue.body}
 
       console.log('⭐️  #%s: %s', issue.number, issue.title.cyan);
 
-      fs.writeFile(issueFilename, finalIssue, function (error) {
+      fse.writeFile(issueFilename, finalIssue, function (error) {
         if (error) {
           cb(error, null);
         }
@@ -302,7 +308,7 @@ ${issue.body}
 
     // INFO: list of files in /issues
     var paths = {};
-    fs.readdir('issues/', function (error, files) {
+    fse.readdir('issues/', function (error, files) {
       if (error) {
         throw error
       }
@@ -333,7 +339,7 @@ ${individualComment.body}
 `;
 
         // INFO: append all comments to file
-        fs.appendFile(writeToFile, commentFinal, function (error) {
+        fse.appendFile(writeToFile, commentFinal, function (error) {
           if (error) {
             cb(error, null);
           }
