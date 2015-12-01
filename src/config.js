@@ -45,7 +45,7 @@ module.exports = {
         // INFO: .gitignore exists
         // INFO: check if contains 'issues/'
         fs.readFile('.gitignore', 'utf8', function(err, data) {
-          if (data.indexOf('issues/') === 0) {
+          if (data.indexOf('issues/') >= 0) {
 
             // INFO: .gitignore contains 'issues/'
           } else {
