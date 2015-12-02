@@ -25,6 +25,7 @@ var config = require('./config');
 var github = config.github;
 
 // INFO: attempt at a platform agnostic place to store auth tokens
+// TODO: get rid of these - put them on config.js
 var configDir = path.resolve(os.homedir(), '.config' , 'get-issues');
 var configFile = path.resolve(configDir, 'setup.json');
 
@@ -153,29 +154,30 @@ async.waterfall([
   },
 
   // INFO: if repo is private, checks for github auth token
-  function checkIfPrivateRepo (filterOutPR, currentRepoInfo, cb) {
+  function checkIfPrivateRepo (filteredIssues, currentRepoInfo, cb) {
 
-    if (filterOutPR === 'invalid repo') {
+    if (filteredIssues === 'invalid repo') {
+
       // INFO: let's check if this token already exits
       fse.readJSON(configFile, function(err, obj) {
           if (err) {
             var tokenCheck = true;
             // INFO: no token found
-            cb(null, filterOutPR, tokenCheck, currentRepoInfo);
+            cb(null, filteredIssues, tokenCheck, currentRepoInfo);
           } else {
             var tokenCheck = obj.token;
             // INFO: found token that exits already
-            cb(null, filterOutPR, tokenCheck, currentRepoInfo);
+            cb(null, filteredIssues, tokenCheck, currentRepoInfo);
           }
         });
-    } else if (filterOutPR) {
+    } else if (filteredIssues) {
       var tokenCheck = false;
-      cb(null, filterOutPR, tokenCheck, currentRepoInfo);
+      cb(null, filteredIssues, tokenCheck, currentRepoInfo);
     }
   },
 
   // INFO: if token is need and doesn't exists create it
-  function getTokenIfNeeded(filterOutPR, tokenCheck, currentRepoInfo, cb) {
+  function getTokenIfNeeded(filteredIssues, tokenCheck, currentRepoInfo, cb) {
     var tokenFinal;
 
     // INFO: if tokenCheck is true, need to get token prompts user
@@ -194,26 +196,26 @@ async.waterfall([
         var tokenFinal = answers.token;
         fse.outputJSON(configFile, {token: tokenFinal}, function(err){
           if (err) throw err
-          cb(null, tokenFinal, filterOutPR, currentRepoInfo);
+          cb(null, tokenFinal, filteredIssues, currentRepoInfo);
         });
       });
     } else if (!tokenCheck) {
       // INFO: not private repo, no auth needed
       tokenFinal = 'public';
-      cb(null, tokenFinal, filterOutPR, currentRepoInfo);
+      cb(null, tokenFinal, filteredIssues, currentRepoInfo);
     } else {
       // INFO: token already exists, just read it
       tokenFinal = tokenCheck;
-      cb(null, tokenFinal, filterOutPR, currentRepoInfo);
+      cb(null, tokenFinal, filteredIssues, currentRepoInfo);
     }
 
   },
 
-  function githubAuthIfNeed(tokenFinal, filterOutPR, currentRepoInfo, cb) {
+  function githubAuthIfNeed(tokenFinal, filteredIssues, currentRepoInfo, cb) {
 
     // INFO: skip github auth if public repo
     if (tokenFinal === 'public') {
-      cb(null, filterOutPR);
+      cb(null, filteredIssues);
     } else if (tokenFinal) {
 
       github.authenticate({
@@ -231,24 +233,24 @@ async.waterfall([
             fse.remove(configFile, function(err){if (err) throw err});
           } else {
             // INFO: good credentials
-            var filterOutPR = [];
+            var filteredIssues = [];
 
             res.forEach(function (issue) {
               if (!issue.pull_request) {
-                filterOutPR.push(issue);
+                filteredIssues.push(issue);
               }
             });
-            cb(null, filterOutPR);
+            cb(null, filteredIssues);
           }
       });
     }
   },
 
   // INFO: create a file for each issue in /issues
-  function createIssueFiles (filterOutPR, cb) {
+  function createIssueFiles (filteredIssues, cb) {
 
     var commentsURL = [];
-    filterOutPR.forEach(function (issue) {
+    filteredIssues.forEach(function (issue) {
 
       // INFO: slugify title to get rid of characters that can cause filename problems
       var issueFilename = util.format('issues/%s-%s.md', String(issue.number), slug(issue.title));
