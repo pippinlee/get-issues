@@ -54,6 +54,8 @@ var callURL = function (url, cb) {
       cb(null, info);
     }
   }
+
+  // FIX: this line is broken
   request(options, callback);
 };
 
