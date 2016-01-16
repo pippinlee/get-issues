@@ -23,7 +23,7 @@ function addGitIgnore() {
   });
 };
 
-module.exports = {
+var config = {
   genReqObj: function(uri, baseUrl, method) {
     return {
       uri: uri || '',
