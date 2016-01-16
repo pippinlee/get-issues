@@ -82,49 +82,131 @@ async.waterfall([
       if (error) {
         cb(error, null);
       } else {
-        var remoteUrl = remotes[0].url;
-        cb(null, remoteUrl);
+        config.curRepoInfo.remoteUrl = remotes[0].url;
+        cb(null);
       }
     });
   },
 
-  function makeApiUri(remoteUrl, cb) {
+  function parseRemoteUrl(cb) {
 
     // TEST: force the url to w/e I want
     // remoteURL = 'username@github.com:repo-user/repo-name.git';
-    var parsedUrl = url.parse(remoteUrl);
-    var currentRepoInfo = {};
-    var uri = '';
+    var parsedUrl = url.parse(config.curRepoInfo.remoteUrl);
 
-    // TEST: check actual value
-    console.log('parsedUrl', parsedUrl.protocol);
+    // INFO: convenience variable
+    var remoteUrl = config.curRepoInfo.remoteUrl;
 
     // INFO: handle scp-like syntax ssh protocol in remote url
     if (parsedUrl.protocol === null) {
       parsedUrl = scpUrl.parse(remoteUrl);
-      uri = 'repos' + parsedUrl.pathname.split('.')[0] + '/issues';
       config.curRepoInfo.username = parsedUrl.pathname.split('/')[1];
       config.curRepoInfo.repo = path.basename(remoteUrl, '.git');
     } else {
 
       // INFO: handle regular https remote URL
-      var splitURL = parsedUrl.pathname.split('.');
-      uri = 'repos' + splitURL[0] + '/issues';
       config.curRepoInfo.username = parsedUrl.pathname.split('/')[1];
       config.curRepoInfo.repo = path.basename(remoteUrl, '.git');
     }
 
-    // TEST: check if uri is correct
-    console.log('uri', uri);
-    console.log('currentRepoInfo', currentRepoInfo);
+    cb(null);
+  },
 
-    // TODO: remove currentRepoInfo from callback
-    cb(null, uri, currentRepoInfo);
+  function getRepoInfo(cb) {
+
+    // We know 'remoteUrl' is correct because it's pulled
+    // directly from the .git folder information
+
+    // if github api returns 404  && "not found"
+    // INFO: This is inificient
+    var needAuth = false;
+
+    var msg = {
+      user: config.curRepoInfo.username,
+      repo: 'trax-vagrant'
+      // repo: config.curRepoInfo.repo
+    };
+    config.github.repos.get(msg, function(err, data) {
+      if (err) {
+
+        // INFO: convenience variables
+        var message = JSON.parse(err.message).message;
+        var code = err.code;
+        if (message === 'Not Found' && code === 404) {
+
+          // INFO: we've encountered a private repo (potencially)
+          needAuth = true;
+        } else {
+
+          // INFO: we've encountered some actual error
+          cb(err, null);
+        }
+      }
+
+      // TEST: display variables
+      console.log('needAuth', needAuth);
+
+      cb(null, needAuth);
+    });
+  },
+
+  function requestUserAuth(activate, cb) {
+    if (activate) {
+
+      // INFO: we needed to auth
+      inquirer.prompt(config.questions.auth, function(answers) {
+
+        // INFO: set auth object in GitHubApi object
+        config.github.authenticate({
+          type: 'basic',
+          username: answers.username,
+          password: answers.password
+        });
+
+        // INFO: get token
+        config.github.authorization.create({
+          scopes: [
+            "repo",
+            "public_repo"
+          ],
+          note: 'get-issues token'
+        }, function(err, res) {
+          if (err) {
+            console.log('github auth err', err.toJSON());
+            var message = JSON.parse(err.message).message;
+            var code = err.code;
+
+            // INFO: incorrect creds
+            if (message === 'Bad credentials' && code === 401) {
+
+            }
+
+            // INFO: token already exists
+          } else {
+            console.log('github auth res', res);
+            if (res.token) {
+              // INFO: save token
+            } else {
+
+              // INFO: wtf?
+            }
+          }
+          process.exit(12);
+          cb(null);
+        });
+      });
+    } else {
+
+      // INFO: we didn't need to auth, move on
+      cb(null);
+    }
   },
 
   // INFO: make request to remote repo's issue page
   function getIssues(uri, currentRepoInfo, cb) {
     var reqOptions = config.genReqObj(uri);
+
+    // FIX: `request` isn't a thing
     request(reqOptions, function getIssuesReq(error, response, body) {
       if (error) { cb(error, null); }
       if (!error && response.statusCode !== 200) {
