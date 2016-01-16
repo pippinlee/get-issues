@@ -59,9 +59,32 @@ module.exports = {
       }
     });
   },
+  tokenDir: function() {
+    return path.join(os.homedir(), '.config', 'get-issues');
+  },
+  tokenFile: function() {
+    return path.join(this.tokenDir, 'oauth-token.json');
+  },
   github: github,
+  questions: {
+    auth: [
+      {
+        type: 'input',
+        name: 'username',
+        message: 'GitHub Username'
+      },
+      {
+        type: 'password',
+        name: 'password',
+        message: 'GitHub Password'
+      }
+    ]
+  },
   curRepoInfo: {
+    remoteUrl: '',
     username: '',
     repo: ''
   }
 };
+
+module.exports = config;

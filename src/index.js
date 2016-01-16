@@ -22,11 +22,6 @@ var colors = require('colors');
 var config = require('./config');
 var github = config.github;
 
-// INFO: attempt at a platform agnostic place to store auth tokens
-// TODO: get rid of these - put them on config.js
-var configDir = path.resolve(os.homedir(), '.config' , 'get-issues');
-var configFile = path.resolve(configDir, 'setup.json');
-
 // INFO: set options for slug config
 var slugOptions = {
   addEToUmlauts: true,
