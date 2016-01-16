@@ -41,11 +41,7 @@
     "git-tools": "^0.2.1",
     "github": "^0.2.4",
     "inquirer": "^0.11.0",
-    "request": "^2.65.0",
     "ssh-url": "^0.1.5",
     "urlify": "^0.3.6"
-  },
-  "devDependencies": {
-    "standard": "^5.4.1"
   }
 }
