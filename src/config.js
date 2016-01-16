@@ -1,9 +1,11 @@
 'use strict';
 
+var os = require('os');
 var fs = require('fs');
 var path = require('path');
 var GitHubApi = require('github');
 
+// INFO: Instanciate the GitHub Api module
 var github = new GitHubApi({
   version: '3.0.0',
   debug: false,

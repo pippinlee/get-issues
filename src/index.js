@@ -5,13 +5,11 @@
 // INFO: Node Modules
 var util = require('util');
 var url = require('url');
-var os = require('os');
 var path = require('path');
 
 // INFO: NPM Modules
 var async = require('async');
 var Repo = require('git-tools');
-var request = require('request');
 var fse = require('fs-extra');
 var figlet = require('figlet');
 var slugFactory = require('urlify');
