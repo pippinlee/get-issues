@@ -38,28 +38,7 @@ var slugOptions = {
 // INFO: instanciate the slug factory
 var slug = slugFactory.create(slugOptions);
 
-// INFO: set options for github api requests
-// NOTE: is this useful?
-var callURL = function (url, cb) {
-  var options = {
-    url: url,
-    headers: {
-      'User-Agent': 'request'
-    }
-  };
-
-  function callback(error, response, body) {
-    if (!error && response.statusCode === 200) {
-      var info = JSON.parse(body);
-      cb(null, info);
-    }
-  }
-
-  // FIX: this line is broken
-  request(options, callback);
-};
-
-
+// INFO: Module workflow
 async.waterfall([
 
   // INFO: check if /issues folder needs to be created
