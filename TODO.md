@@ -7,6 +7,7 @@
         - use token
       - not token
         - do prompt get u/p
+          - if 2FA re-prompt with security code
         - write token to disk
   - if pub
     - use uri path (no auth)
