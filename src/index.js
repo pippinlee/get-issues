@@ -14,7 +14,6 @@ var fse = require('fs-extra');
 var figlet = require('figlet');
 var slugFactory = require('urlify');
 var scpUrl = require('ssh-url');
-// var options = require('./options');
 var inquirer = require('inquirer');
 var colors = require('colors');
 
@@ -357,7 +356,6 @@ async.waterfall([
           },
           function done(error) {
             console.log('>> for each comment >> DONE'); // TEST
-            process.exit(12);
             if (error) {
               asyncEach_cb(error);
             } else {
@@ -370,31 +368,38 @@ async.waterfall([
         if (error) {
           water_cb(error);
         } else {
-          process.exit(12);
+          console.log('>> append comments >> DONE'); // TEST
           water_cb(null);
         }
       }
     );
   }
 ],
+
+  // INFO: end of waterfall
   function (err, result) {
     if (err) {
       console.error(err);
       return;
     }
+
     // INFO: fancy output
-    figlet.text('got issues!', {
-      horizontalLayout: 'default',
-      verticalLayout: 'default'
-    }, function (err, data) {
-      if (err) {
-        console.log('Something went wrong...');
-        console.dir(err);
-        return;
+    figlet.text(
+      'got issues!',
+      {
+        horizontalLayout: 'default',
+        verticalLayout: 'default'
+      },
+      function (err, data) {
+        if (err) {
+          console.log('Something went wrong...');
+          console.dir(err);
+          return;
+        }
+        console.log(data);
+        console.log('\n    check your new issues/ directory'.green);
+        console.log('    (issues/ was added to .gitignore)\n');
       }
-      console.log(data);
-      console.log('\n    check your new issues/ directory'.green);
-      console.log('    (issues/ was added to .gitignore)\n');
-    });
+    );
   }
 );
