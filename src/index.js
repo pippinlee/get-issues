@@ -375,69 +375,7 @@ async.waterfall([
         }
       }
     );
-  },
-
-  // INFO: create a new array of responses from each comment url
-  // INFO: if a issue has a comment value > 0 it will get requested
-  function getIssueComments (commentsURL, cb) {
-
-    // INFO: take array of comment urls and get content
-    // INFO: callURL at the top of this file does all the
-    // INFO: request work for each URL
-    async.map(commentsURL, callURL, function (error, results) {
-      if (error) {
-        cb(error, null);
-      }
-      cb(null, results);
-    });
-  },
-
-  // INFO: create obj to match issue comments and existing file
-  function setupIssueComments (results, cb) {
-
-    // INFO: list of files in /issues
-    var paths = {};
-    fse.readdir('issues/', function (error, files) {
-      if (error) {
-        throw error
-      }
-
-      // INFO: for each url with comments this create a property
-      // INFO: on the paths object so that we're able to easy
-      // INFO: find which file comments should go
-      files.forEach(function (file) {
-        paths[ file.split('-')[0] ] = 'issues/' + file;
-      });
-
-      cb(null, paths, results);
-    });
-  },
-
-  // INFO: where we actually write the comments to their correct
-  // INFO: issue file in /issues directory
-  function writeIssueComments (paths, results, cb) {
-    results.forEach(function (comment) {
-      comment.forEach(function (individualComment) {
-        var writeToFile = paths[ individualComment.issue_url.split('/')[7] ];
-        var commentFinal = `${individualComment.user.login}
-${Date(individualComment.created_at)}
-
-${individualComment.body}
-
--------------------------------------------------------------------------------
-`;
-
-        // INFO: append all comments to file
-        fse.appendFile(writeToFile, commentFinal, function (error) {
-          if (error) {
-            cb(error, null);
-          }
-        });
-      });
-    });
-    cb(null, 'done writing comments'.red);
   }
-
 ],
   function (err, result) {
     if (err) {
