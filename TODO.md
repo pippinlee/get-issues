@@ -26,3 +26,4 @@ async.waterfall([
 ]);
 ```
 - ES6 everything
+- make user of `commander` module
