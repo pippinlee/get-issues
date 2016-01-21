@@ -102,7 +102,7 @@ async.waterfall([
     var needAuth = false;
 
     // TEST: testing private/public repos; set var to test value
-    config.curRepoInfo.repo = 'trax-vagrant';
+    // config.curRepoInfo.repo = 'trax-vagrant';
 
     var msg = {
       user: config.curRepoInfo.username,
@@ -125,8 +125,7 @@ async.waterfall([
         }
       }
 
-      // TEST: display variables
-      console.log('>> needAuth', needAuth);
+      console.log('>> needAuth', needAuth); // TEST
 
       cb(null, needAuth);
     });
@@ -200,7 +199,6 @@ async.waterfall([
               // INFO: wtf?
             }
           }
-          process.exit(12);
           cb(null);
         });
       });
