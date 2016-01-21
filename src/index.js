@@ -210,133 +210,171 @@ async.waterfall([
   },
 
   // INFO: make request to remote repo's issue page
-  function getIssues(cb) {
-
-    /**
-     * at this point we have auth
-     *
-     * we need to get issues
-     *
-     * config.github.issues.getAll()
-     */
-    config.github.issues.getAll({
-
-    }, function(err, res) {
+  function getIssues(water_cb) {
+    console.log('>> getIssues <<'); // TEST
+    config.github.issues.getForRepo({
+      user: config.curRepoInfo.username,
+      repo: config.curRepoInfo.repo,
+      state: 'all' // TODO: change to 'open'
+    }, function(err, issues) {
       if (err) {
-        console.log('>> github issues error ', err.toJSON());
-        console.log('>> github response ', res);
+        console.log('>> github issues error ', err.toJSON()); // TEST
+        console.log('>> github response (issues) ', issues); // TEST
+        water_cb(err);
       } else {
-        console.log('>> github response ', res);
+
+        // INFO: res = array of issues AND pr's
+        // console.log('>> github response (issues) ', issues); // TEST
+        // console.log('>> PRE ASYNC REJECT >>'); // TEST
+        async.filter(
+          issues,
+          function removePullRequests(item, async_cb) {
+            // console.log('>> removePullRequest >> '); // TEST
+            if (item.pull_request) {
+              // console.log('>> removePullRequest >> drop it'); // TEST
+              async_cb(false);
+            } else {
+              // console.log('>> removePullRequest >> keep it'); // TEST
+              async_cb(true);
+            }
+          },
+          function done(filteredIssues) {
+            // console.log('>> filtered issues >> ', filteredIssues); // TEST
+            water_cb(null, filteredIssues);
+          }
+        );
       }
     });
-    process.exit(12);
-    cb(null);
   },
 
-  // INFO: if token is need and doesn't exists create it
-  function getTokenIfNeeded(filteredIssues, tokenCheck, currentRepoInfo, cb) {
-    var tokenFinal;
-
-    // INFO: if tokenCheck is true, need to get token prompts user
-    if (tokenCheck === true){
-
-      // INFO: it's a private repo
-      var questions = [
-        {
-          type: "input",
-          name: "token",
-          message: "https://github.com/settings/tokens/new?scopes=repo&description=get%20issues%20CLI".red.underline + "\n\n ⎔".magenta + " Click above link to create a Github access token" + "\n\n ⎔".magenta + " Leave \"scope\" options as is, and click \"Generate token\" " + "\n\n ⎔".magenta + " This token will be stored locally and used whenever accessing a private repo" + "\n\n ⎔".magenta + " Paste token here:"
-        }
-      ];
-      // INFO: get user to past github activity token with "repo" privileges
-      inquirer.prompt( questions, function( answers ) {
-        var tokenFinal = answers.token;
-        fse.outputJSON(configFile, {token: tokenFinal}, function(err){
-          if (err) throw err
-          cb(null, tokenFinal, filteredIssues, currentRepoInfo);
-        });
-      });
-    } else if (!tokenCheck) {
-      // INFO: not private repo, no auth needed
-      tokenFinal = 'public';
-      cb(null, tokenFinal, filteredIssues, currentRepoInfo);
-    } else {
-      // INFO: token already exists, just read it
-      tokenFinal = tokenCheck;
-      cb(null, tokenFinal, filteredIssues, currentRepoInfo);
-    }
-
-  },
-
-  function githubAuthIfNeed(tokenFinal, filteredIssues, currentRepoInfo, cb) {
-
-    // INFO: skip github auth if public repo
-    if (tokenFinal === 'public') {
-      cb(null, filteredIssues);
-    } else if (tokenFinal) {
-
-      github.authenticate({
-          type: "oauth",
-          token: tokenFinal
-      });
-      github.issues.repoIssues({
-          user: currentRepoInfo.username,
-          repo: currentRepoInfo.repo,
-          state: 'open',
-          per_page: 100
-      }, function(err, res) {
+  // INFO: make request to get all comments for each issue
+  function getIssueComments(issues, water_cb) {
+    console.log('>> getIssueComments <<'); // TEST
+    async.each(
+      issues,
+      function getComments(issue, async_cb) {
+        config.github.issues.getComments({
+          user: config.curRepoInfo.username,
+          repo: config.curRepoInfo.repo,
+          number: issue.number
+        },
+        function(err, comments) {
           if (err) {
-            // INFO: bad credentials
-            fse.remove(configFile, function(err){if (err) throw err});
+            console.log('>> github comments error ', err.toJSON()); // TEST
+            console.log('>> github response (comments) ', comments); // TEST
+            async_cb(err);
           } else {
-            // INFO: good credentials
-            var filteredIssues = [];
+            // console.log('>> github comments >> ', comments); // TEST
+            issue.comments = comments;
+            async_cb(null);
+          }
+        });
+      },
+      function done(error) {
+        if (error) {
+          water_cb(error);
+        } else {
+          water_cb(null, issues);
+        }
+      }
+    );
+  },
 
-            res.forEach(function (issue) {
-              if (!issue.pull_request) {
-                filteredIssues.push(issue);
+  // INFO: create initial issue files
+  function createIssueFiles(issues, water_cb) {
+    console.log('>> createIssueFiles <<'); // TEST
+    // console.log('>> received issues >> ', issues); // TEST
+    async.each(
+      issues,
+      function createFiles(issue, async_cb){
+        // console.log('>> working issue >> ', issue); // TEST
+
+        // INFO: create title for issue
+        var issueFilename = util.format(
+          'issues/%s-%s.md',
+          String(issue.number),
+          slug(issue.title)
+        );
+
+        // INFO: create context body for issue file
+        var issueContext = templates.issueContent(issue);
+
+        // INFO: prompt user
+        console.log('⭐️  #%s: %s', issue.number, colors.cyan(issue.title));
+
+        // INFO: create the issue file
+        fse.writeFile(issueFilename, issueContext, function(error) {
+          if (error) {
+            async_cb(error);
+          } else {
+            async_cb(null);
+          }
+        });
+      },
+      function done(error) {
+        if (error) {
+          water_cb(error);
+        } else {
+          water_cb(null, issues);
+        }
+      }
+    );
+
+  },
+
+  // INFO: add comments to each issue file
+  function appendComments(issues, water_cb) {
+    console.log('>> appendComments <<'); // TEST
+    async.each(
+      issues,
+      function writeComments(issue, asyncEach_cb) {
+        console.log('>> write comments >> '); // TEST
+        // INFO: create title for issue
+        var issueFilename = util.format(
+          'issues/%s-%s.md',
+          String(issue.number),
+          slug(issue.title)
+        );
+
+        // INFO: append each comment in order
+        console.log('>> for each comment >> START'); // TEST
+        async.eachSeries(
+          issue.comments,
+          function eachComment(comment, asyncEachSeries_cb) {
+            console.log('>> single comment >> '); // TEST
+
+            // INFO:create context for comments
+            var commentContext = templates.commentContent(comment);
+
+            // INFO: append comments to issue file
+            fse.appendFile(issueFilename, commentContext, function(error) {
+              if (error) {
+                asyncEachSeries_cb(error);
+              } else {
+                asyncEachSeries_cb(null);
               }
             });
-            cb(null, filteredIssues);
+          },
+          function done(error) {
+            console.log('>> for each comment >> DONE'); // TEST
+            process.exit(12);
+            if (error) {
+              asyncEach_cb(error);
+            } else {
+              asyncEach_cb(null);
+            }
           }
-      });
-    }
-  },
-
-  // INFO: create a file for each issue in /issues
-  function createIssueFiles (filteredIssues, cb) {
-
-    var commentsURL = [];
-    filteredIssues.forEach(function (issue) {
-
-      // INFO: slugify title to get rid of characters that can cause filename problems
-      var issueFilename = util.format('issues/%s-%s.md', String(issue.number), slug(issue.title));
-
-      // TODO: fix this, it's bad
-      // INFO: template strings use indents, to avoid indents we must forgo code readability
-      var finalIssue = `${issue.title}
-Issue filed by: ${issue.user.login}
-${Date(issue.created_at)}
-
-${issue.body}
--------------------------------------------------------------------------------
-`;
-
-      console.log('⭐️  #%s: %s', issue.number, issue.title.cyan);
-
-      fse.writeFile(issueFilename, finalIssue, function (error) {
+        );
+      },
+      function done(error) {
         if (error) {
-          cb(error, null);
+          water_cb(error);
+        } else {
+          process.exit(12);
+          water_cb(null);
         }
-      });
-
-      // INFO: make sure only get issues that have comments
-      // INFO: else request to comments_url will be empty
-      if (issue.comments > 0) {
-        commentsURL.push(issue.comments_url);
       }
-    });
-    cb(null, commentsURL);
+    );
   },
 
   // INFO: create a new array of responses from each comment url
