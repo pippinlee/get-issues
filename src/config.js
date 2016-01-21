@@ -3,7 +3,7 @@
 var os = require('os');
 var fs = require('fs');
 var path = require('path');
-var GitHubApi = require('github');
+var GitHubApi = require('github4');
 
 // INFO: Instanciate the GitHub Api module
 var github = new GitHubApi({
