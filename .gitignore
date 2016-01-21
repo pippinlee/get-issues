@@ -3,5 +3,4 @@ node_modules/
 npm-debug.log*
 typings/
 jsconfig.json
-TODO.md
 issues/
