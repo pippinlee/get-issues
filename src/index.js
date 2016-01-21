@@ -21,6 +21,7 @@ var colors = require('colors');
 // INFO: src modules
 var config = require('./config');
 var github = config.github;
+var templates = require('./templates');
 
 // INFO: set options for slug config
 var slugOptions = {
