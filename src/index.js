@@ -121,10 +121,12 @@ async.waterfall([
     // INFO: This is inificient
     var needAuth = false;
 
+    // TEST: testing private/public repos; set var to test value
+    config.curRepoInfo.repo = 'trax-vagrant';
+
     var msg = {
       user: config.curRepoInfo.username,
-      repo: 'trax-vagrant'
-      // repo: config.curRepoInfo.repo
+      repo: config.curRepoInfo.repo
     };
     config.github.repos.get(msg, function(err, data) {
       if (err) {
@@ -144,7 +146,7 @@ async.waterfall([
       }
 
       // TEST: display variables
-      console.log('needAuth', needAuth);
+      console.log('>> needAuth', needAuth);
 
       cb(null, needAuth);
     });
@@ -154,6 +156,10 @@ async.waterfall([
     if (activate) {
 
       // INFO: we needed to auth
+      // INFO: have we auth'd before?
+      // INFO: check if we have auth token already
+
+      // INFO: no auth token, init user interaction
       inquirer.prompt(config.questions.auth, function(answers) {
 
         // INFO: set auth object in GitHubApi object
@@ -172,16 +178,39 @@ async.waterfall([
           note: 'get-issues token'
         }, function(err, res) {
           if (err) {
-            console.log('github auth err', err.toJSON());
+            console.log('>> github auth err', err.toJSON());
+            console.log('>> github response ', res);
             var message = JSON.parse(err.message).message;
             var code = err.code;
+            switch (code) {
+              case 401:
+                switch (message) {
+                  case 'Bad credentials':
 
-            // INFO: incorrect creds
-            if (message === 'Bad credentials' && code === 401) {
+                    // INFO: user entered invalid credentials
+                    break;
+                  case 'Must specify two-factor authentication OTP code.':
 
+                    // INFO: get user to enter code
+                    // INFO: resend request with new headers
+                    break;
+                  default:
+
+                    // INFO: token already exists?
+                    break;
+                };
+                break;
+              case 403:
+                switch (message) {
+                  default:
+                    console.log('>> ERROR: 403 error');
+                    break;
+                }
+              default:
+
+                // INFO: catch all other error codes
+                break;
             }
-
-            // INFO: token already exists
           } else {
             console.log('github auth res', res);
             if (res.token) {
@@ -203,54 +232,27 @@ async.waterfall([
   },
 
   // INFO: make request to remote repo's issue page
-  function getIssues(uri, currentRepoInfo, cb) {
-    var reqOptions = config.genReqObj(uri);
+  function getIssues(cb) {
 
-    // FIX: `request` isn't a thing
-    request(reqOptions, function getIssuesReq(error, response, body) {
-      if (error) { cb(error, null); }
-      if (!error && response.statusCode !== 200) {
+    /**
+     * at this point we have auth
+     *
+     * we need to get issues
+     *
+     * config.github.issues.getAll()
+     */
+    config.github.issues.getAll({
 
-        // TODO: remove currentRepoInfo from callback
-        cb(error, 'invalid repo', currentRepoInfo);
-      }
-      if (!error && response.statusCode === 200) {
-        var info = JSON.parse(body);
-        var processIssues = function(item, callback) {
-          if (!item.pull_request) {
-            callback(true);
-          } else {
-            callback(false);
-          }
-        };
-        async.filter(info, processIssues, function(filteredIssues) {
-          cb(null, filteredIssues, currentRepoInfo);
-        });
+    }, function(err, res) {
+      if (err) {
+        console.log('>> github issues error ', err.toJSON());
+        console.log('>> github response ', res);
+      } else {
+        console.log('>> github response ', res);
       }
     });
-  },
-
-  // INFO: if repo is private, checks for github auth token
-  function checkIfPrivateRepo (filteredIssues, currentRepoInfo, cb) {
-
-    if (filteredIssues === 'invalid repo') {
-
-      // INFO: let's check if this token already exits
-      fse.readJSON(configFile, function(err, obj) {
-          if (err) {
-            var tokenCheck = true;
-            // INFO: no token found
-            cb(null, filteredIssues, tokenCheck, currentRepoInfo);
-          } else {
-            var tokenCheck = obj.token;
-            // INFO: found token that exits already
-            cb(null, filteredIssues, tokenCheck, currentRepoInfo);
-          }
-        });
-    } else if (filteredIssues) {
-      var tokenCheck = false;
-      cb(null, filteredIssues, tokenCheck, currentRepoInfo);
-    }
+    process.exit(12);
+    cb(null);
   },
 
   // INFO: if token is need and doesn't exists create it
