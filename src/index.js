@@ -68,9 +68,6 @@ async.waterfall([
   },
 
   function parseRemoteUrl(cb) {
-
-    // TEST: force the url to w/e I want
-    // remoteURL = 'username@github.com:repo-user/repo-name.git';
     var parsedUrl = url.parse(config.curRepoInfo.remoteUrl);
 
     // INFO: convenience variable
@@ -100,9 +97,6 @@ async.waterfall([
     // INFO: This is inificient
     var needAuth = false;
 
-    // TEST: testing private/public repos; set var to test value
-    // config.curRepoInfo.repo = 'trax-vagrant';
-
     var msg = {
       user: config.curRepoInfo.username,
       repo: config.curRepoInfo.repo
@@ -123,9 +117,6 @@ async.waterfall([
           cb(err, null);
         }
       }
-
-      console.log('>> needAuth', needAuth); // TEST
-
       cb(null, needAuth);
     });
   },
@@ -156,6 +147,8 @@ async.waterfall([
           note: 'get-issues token'
         }, function(err, res) {
           if (err) {
+
+            // TODO: make this all work
             console.log('>> github auth err', err.toJSON());
             console.log('>> github response ', res);
             var message = JSON.parse(err.message).message;
@@ -210,35 +203,26 @@ async.waterfall([
 
   // INFO: make request to remote repo's issue page
   function getIssues(water_cb) {
-    console.log('>> getIssues <<'); // TEST
     config.github.issues.getForRepo({
       user: config.curRepoInfo.username,
       repo: config.curRepoInfo.repo,
-      state: 'all' // TODO: change to 'open'
+      state: 'open'
     }, function(err, issues) {
       if (err) {
-        console.log('>> github issues error ', err.toJSON()); // TEST
-        console.log('>> github response (issues) ', issues); // TEST
         water_cb(err);
       } else {
 
         // INFO: res = array of issues AND pr's
-        // console.log('>> github response (issues) ', issues); // TEST
-        // console.log('>> PRE ASYNC REJECT >>'); // TEST
         async.filter(
           issues,
           function removePullRequests(item, async_cb) {
-            // console.log('>> removePullRequest >> '); // TEST
             if (item.pull_request) {
-              // console.log('>> removePullRequest >> drop it'); // TEST
               async_cb(false);
             } else {
-              // console.log('>> removePullRequest >> keep it'); // TEST
               async_cb(true);
             }
           },
           function done(filteredIssues) {
-            // console.log('>> filtered issues >> ', filteredIssues); // TEST
             water_cb(null, filteredIssues);
           }
         );
@@ -248,7 +232,6 @@ async.waterfall([
 
   // INFO: make request to get all comments for each issue
   function getIssueComments(issues, water_cb) {
-    console.log('>> getIssueComments <<'); // TEST
     async.each(
       issues,
       function getComments(issue, async_cb) {
@@ -259,11 +242,8 @@ async.waterfall([
         },
         function(err, comments) {
           if (err) {
-            console.log('>> github comments error ', err.toJSON()); // TEST
-            console.log('>> github response (comments) ', comments); // TEST
             async_cb(err);
           } else {
-            // console.log('>> github comments >> ', comments); // TEST
             issue.comments = comments;
             async_cb(null);
           }
@@ -281,12 +261,9 @@ async.waterfall([
 
   // INFO: create initial issue files
   function createIssueFiles(issues, water_cb) {
-    console.log('>> createIssueFiles <<'); // TEST
-    // console.log('>> received issues >> ', issues); // TEST
     async.each(
       issues,
       function createFiles(issue, async_cb){
-        // console.log('>> working issue >> ', issue); // TEST
 
         // INFO: create title for issue
         var issueFilename = util.format(
@@ -323,11 +300,10 @@ async.waterfall([
 
   // INFO: add comments to each issue file
   function appendComments(issues, water_cb) {
-    console.log('>> appendComments <<'); // TEST
     async.each(
       issues,
       function writeComments(issue, asyncEach_cb) {
-        console.log('>> write comments >> '); // TEST
+
         // INFO: create title for issue
         var issueFilename = util.format(
           'issues/%s-%s.md',
@@ -336,11 +312,9 @@ async.waterfall([
         );
 
         // INFO: append each comment in order
-        console.log('>> for each comment >> START'); // TEST
         async.eachSeries(
           issue.comments,
           function eachComment(comment, asyncEachSeries_cb) {
-            console.log('>> single comment >> '); // TEST
 
             // INFO:create context for comments
             var commentContext = templates.commentContent(comment);
@@ -355,7 +329,6 @@ async.waterfall([
             });
           },
           function done(error) {
-            console.log('>> for each comment >> DONE'); // TEST
             if (error) {
               asyncEach_cb(error);
             } else {
@@ -368,7 +341,6 @@ async.waterfall([
         if (error) {
           water_cb(error);
         } else {
-          console.log('>> append comments >> DONE'); // TEST
           water_cb(null);
         }
       }
