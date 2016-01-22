@@ -11,6 +11,7 @@ var path = require('path');
 var async = require('async');
 var Repo = require('git-tools');
 var fse = require('fs-extra');
+var fs = require('fs');
 var figlet = require('figlet');
 var slugFactory = require('urlify');
 var scpUrl = require('ssh-url');
