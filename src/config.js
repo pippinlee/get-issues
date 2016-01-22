@@ -63,7 +63,7 @@ var config = {
     return path.join(os.homedir(), '.config', 'get-issues');
   },
   tokenFile: function() {
-    return path.join(this.tokenDir, 'oauth-token.json');
+    return path.join(this.tokenDir(), 'oauth-token.json');
   },
   github: github,
   questions: {
