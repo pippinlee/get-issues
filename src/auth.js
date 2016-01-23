@@ -48,8 +48,14 @@ Auth.prototype._promptAnswer = function(answers) {
 
 Auth.prototype._createCallback = function(error, response) {
   if (error) {
+    console.log('>>', 'TESTING', 'error', error);
     let code = error.code;
-    let message = JSON.parse(error.message).message;
+    let message;
+    try {
+      message = JSON.parse(error.message).message;
+    } catch (error) {
+      message = error.message;
+    }
     if (this.count < 3) {
       switch (code) {
         case 401:
