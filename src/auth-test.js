@@ -2,4 +2,4 @@
 
 const Auth = require('./auth');
 
-Auth.createAuthToken('basic');
+Auth.createAuthToken();
