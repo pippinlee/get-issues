@@ -100,12 +100,12 @@ Auth.prototype._authPrep = function(type, data) {
   });
 };
 
-Auth.prototype._genHeaders = function(type, data) {
-  switch (type) {
+Auth.prototype._genHeaders = function() {
+  switch (this.store.authType) {
     case '2FA':
       return {
         'User-Agent': 'get-issues',
-        'X-GitHub-OTP': data.code
+        'X-GitHub-OTP': this.store.creds.code
       };
       break;
     default:
