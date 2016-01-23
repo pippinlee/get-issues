@@ -57,7 +57,7 @@ var config = {
   },
   github: github,
   questions: {
-    auth: [
+    basicAuth: [
       {
         type: 'input',
         name: 'username',
@@ -69,7 +69,7 @@ var config = {
         message: 'GitHub Password'
       }
     ],
-    twofactor: [
+    twoFactorAuth: [
       {
         type: 'input',
         name: 'username',
