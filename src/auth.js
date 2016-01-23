@@ -102,8 +102,26 @@ Auth.prototype._createCallback = function(error, response) {
   } else {
     // INFO: res.token -> save it
     console.log('response:', response);
-    this.done();
+    this.store.token = response.token;
+    _.bind(this._saveToken, this);
   }
+};
+
+Auth.prototype._saveToken = function(){
+  fs.writeFile(
+    config.tokenFile(), // where
+    this.data,          // what
+    'utf8',             // how
+    function(error) {
+      if (error) {
+
+        // INFO: we got an error writing the file
+        console.log('>>', 'saveToken', 'error:', error);
+      } else {
+        _.bind(this._authPrep, this, 'oauth');
+        this.done(null);
+      }
+  });
 };
 
 Auth.prototype._removeToken = function(done) {
