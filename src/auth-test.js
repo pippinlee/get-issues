@@ -2,4 +2,6 @@
 
 const Auth = require('./auth');
 
-Auth.createAuthToken();
+let auth = new Auth(new Function);
+
+auth.createAuthToken();
