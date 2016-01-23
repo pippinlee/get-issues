@@ -115,6 +115,4 @@ function createAuthToken(type, count) {
   };
 };
 
-createAuthToken(1, 'basic');
-
-// console.log('>>> output >>> ', output);
+createAuthToken('basic');
