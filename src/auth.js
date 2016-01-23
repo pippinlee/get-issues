@@ -4,6 +4,7 @@ const inquirer = require('inquirer');
 const _ = require('lodash');
 const colors = require('colors');
 const async = require('async');
+const fs = require('fs');
 
 function Auth(callback) {
   this.count = 0;
