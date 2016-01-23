@@ -165,4 +165,4 @@ Auth.prototype._genHeaders = function() {
   }
 };
 
-module.exports = new Auth;
+module.exports = Auth;
