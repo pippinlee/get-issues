@@ -5,8 +5,9 @@ const _ = require('lodash');
 const colors = require('colors');
 const async = require('async');
 
-function Auth() {
+function Auth(callback) {
   this.count = 0;
+  this.maxTries = 3;
   this.store = {
     authType: 'basic',
     creds: {
@@ -15,6 +16,7 @@ function Auth() {
       code: null,
     }
   };
+  this.done = (callback) ? callback : new Function;
 };
 
 // INFO: module entry point
@@ -56,7 +58,7 @@ Auth.prototype._createCallback = function(error, response) {
     } catch (error) {
       message = error.message;
     }
-    if (this.count < 3) {
+    if (this.count < this.maxTries) {
       switch (code) {
         case 401:
           switch (message) {
