@@ -133,87 +133,11 @@ async.waterfall([
       fs.stat(config.tokenFile(), function(err, stats) {
         if (err) {
           console.log('>>> we got an error while searching for tokenDir');
+
           // INFO: the token file doesn't exist
-          // INFO: BEGINNING
           // INFO: no auth token, init user interaction
-          inquirer.prompt(config.questions.auth, function(answers) {
-
-            // INFO: set auth object in GitHubApi object
-            config.github.authenticate({
-              type: 'basic',
-              username: answers.username,
-              password: answers.password
-            });
-
-            var authError = null;
-            var authResponse = null;
-            function createAuthToken() {
-              config.github.authorization.create({
-                scopes: [
-                  "repo",
-                  "public_repo"
-                ],
-                note: 'get-issues token'
-              }, function(err, res) {
-                authError = err;
-                authResponse = res;
-              });
-            }
-            // INFO: get token
-            config.github.authorization.create({
-              scopes: [
-                "repo",
-                "public_repo"
-              ],
-              note: 'get-issues token'
-            }, function(err, res) {
-              if (err) {
-                console.log('>> github auth err', err.toJSON());
-                console.log('>> github response ', res);
-                var message = JSON.parse(err.message).message;
-                var code = err.code;
-                switch (code) {
-                  case 401:
-                    switch (message) {
-                      case 'Bad credentials':
-
-                        // INFO: user entered invalid credentials
-                        break;
-                      case 'Must specify two-factor authentication OTP code.':
-
-                        // INFO: get user to enter code
-                        // INFO: resend request with new headers
-                        break;
-                      default:
-
-                        // INFO: token already exists?
-                        break;
-                    };
-                    break;
-                  case 403:
-                    switch (message) {
-                      default:
-                        console.log('>> ERROR: 403 error');
-                        break;
-                    }
-                  default:
-
-                    // INFO: catch all other error codes
-                    break;
-                }
-              } else {
-                console.log('github auth res', res);
-                if (res.token) {
-                  // INFO: save token
-                } else {
-
-                  // INFO: wtf?
-                }
-              }
-              cb(null);
-            });
-          });
-          // INFO: ENDING
+          var auth = new Auth(cb);
+          auth.createAuthToken();
         } else {
 
           // INFO: found token file
