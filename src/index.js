@@ -128,72 +128,122 @@ async.waterfall([
       // INFO: we needed to auth
       // INFO: have we auth'd before?
       // INFO: check if we have auth token already
+      fs.stat(config.tokenFile(), function(err, stats) {
+        if (err) {
+          console.log('>>> we got an error while searching for tokenDir');
+          // INFO: the token file doesn't exist
+          // INFO: BEGINNING
+          // INFO: no auth token, init user interaction
+          inquirer.prompt(config.questions.auth, function(answers) {
 
-      // INFO: no auth token, init user interaction
-      inquirer.prompt(config.questions.auth, function(answers) {
+            // INFO: set auth object in GitHubApi object
+            config.github.authenticate({
+              type: 'basic',
+              username: answers.username,
+              password: answers.password
+            });
 
-        // INFO: set auth object in GitHubApi object
-        config.github.authenticate({
-          type: 'basic',
-          username: answers.username,
-          password: answers.password
-        });
+            var authError = null;
+            var authResponse = null;
+            function createAuthToken() {
+              config.github.authorization.create({
+                scopes: [
+                  "repo",
+                  "public_repo"
+                ],
+                note: 'get-issues token'
+              }, function(err, res) {
+                authError = err;
+                authResponse = res;
+              });
+            }
+            // INFO: get token
+            config.github.authorization.create({
+              scopes: [
+                "repo",
+                "public_repo"
+              ],
+              note: 'get-issues token'
+            }, function(err, res) {
+              if (err) {
+                console.log('>> github auth err', err.toJSON());
+                console.log('>> github response ', res);
+                var message = JSON.parse(err.message).message;
+                var code = err.code;
+                switch (code) {
+                  case 401:
+                    switch (message) {
+                      case 'Bad credentials':
 
-        // INFO: get token
-        config.github.authorization.create({
-          scopes: [
-            "repo",
-            "public_repo"
-          ],
-          note: 'get-issues token'
-        }, function(err, res) {
-          if (err) {
+                        // INFO: user entered invalid credentials
+                        break;
+                      case 'Must specify two-factor authentication OTP code.':
 
-            // TODO: make this all work
-            console.log('>> github auth err', err.toJSON());
-            console.log('>> github response ', res);
-            var message = JSON.parse(err.message).message;
-            var code = err.code;
-            switch (code) {
-              case 401:
-                switch (message) {
-                  case 'Bad credentials':
+                        // INFO: get user to enter code
+                        // INFO: resend request with new headers
+                        break;
+                      default:
 
-                    // INFO: user entered invalid credentials
+                        // INFO: token already exists?
+                        break;
+                    };
                     break;
-                  case 'Must specify two-factor authentication OTP code.':
-
-                    // INFO: get user to enter code
-                    // INFO: resend request with new headers
-                    break;
+                  case 403:
+                    switch (message) {
+                      default:
+                        console.log('>> ERROR: 403 error');
+                        break;
+                    }
                   default:
 
-                    // INFO: token already exists?
-                    break;
-                };
-                break;
-              case 403:
-                switch (message) {
-                  default:
-                    console.log('>> ERROR: 403 error');
+                    // INFO: catch all other error codes
                     break;
                 }
-              default:
+              } else {
+                console.log('github auth res', res);
+                if (res.token) {
+                  // INFO: save token
+                } else {
 
-                // INFO: catch all other error codes
-                break;
-            }
-          } else {
-            console.log('github auth res', res);
-            if (res.token) {
-              // INFO: save token
-            } else {
+                  // INFO: wtf?
+                }
+              }
+              cb(null);
+            });
+          });
+          // INFO: ENDING
+        } else {
 
-              // INFO: wtf?
+          // INFO: found token file
+          async.waterfall([
+            function readFile(water_cb) {
+              fs.readFile(
+                config.tokenFile(),
+                'utf8',
+                function(err, data) {
+                  if (err) {
+                    water_cb(err);
+                  }
+                  // { "token": "..." }
+                  var token = JSON.parse(data);
+                  water_cb(null, token);
+                }
+              );
+            },
+            function useToken(token, water_cb) {
+              config.github.authenticate({
+                type: 'oauth',
+                token: token.token
+              });
+              water_cb(null);
             }
-          }
-          cb(null);
-        });
+          ],
+          function(err, results) {
+
+            // INFO: authentication has *potentially* been successful
+            cb(null);
+          });
+        }
       });
     } else {
 
