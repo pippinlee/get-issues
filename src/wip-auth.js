@@ -85,27 +85,29 @@ function createAuthToken(type, count) {
             switch (message) {
               case 'Bad credentials':
                 console.log(colors.cyan('Bad Credentials'));
-                return createAuthToken(++count, 'basic');
+                return createAuthToken('basic', ++count);
                 break;
               case 'Must specify two-factor authentication OTP code.':
                 console.log('2FA needs apply'.cyan);
-                return createAuthToken(++count, '2FA');
+                return createAuthToken('2FA', ++count);
                 break;
               default:
                 console.log('>>> createAuthToken >>> new 401 case: ', err.message);
                 break;
-            }
+            } // end of switch(message)
             break;
           case 422:
             console.log('>>> createAuthToken >>> service has token already');
+            console.log('>>> createAuthToken >>> TODO: remove previous token');
+            console.log('>>> createAuthToken >>> TODO: resubmit');
             break;
           default:
-            console.log('>>> createAuthToken >>> new error code: ', err.code);
+            console.log('>>> createAuthToken >>> new error code:', err.code);
+            return;
             break;
-        }
-        console.log('>>> createAuthToken >>> small count, fn.call');
-        return createAuthToken(++count, 'basic');
+        } // end of switch(code)
       } else {
+        console.log('>>> createAuthToken >>> max attempts reached');
         return;
       }
     } else {
