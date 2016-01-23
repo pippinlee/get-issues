@@ -88,11 +88,41 @@ Auth.prototype._createCallback = function(error, response) {
       console.log('Max attempts exceeded, try again.'.cyan);
     }
   } else {
-
+    // INFO: res.token -> save it
   }
 };
 
+Auth.prototype._removeToken = function(done) {
+  config.github.authorization.getAll({
+    headers: _.bind(this._genHeaders, this)()
+  }, function(err, authTokens) {
+    if (err) {
+      console.log('err:', err);
+    } else {
+      async.filter(
+        authTokens,
+        function(token, filter_cb) {
+          filter_cb(token.app.name === 'get-issues token');
+        },
+        function(result) {
+          config.github.authorization.delete({
+            id: result[0].id,
+            headers: _.bind(this._genHeaders, this)()
+          }, function(err, res) {
+            console.log('delete err:', err);
+            console.log('delete res:', res);
+            done(null);
+          });
+        }
+      );
+    }
+  });
+};
+
 Auth.prototype._authPrep = function(type, data) {
+  /**
+   * type: (basic | oauth)
+   */
   config.github.authenticate({
     type: type,
     username: data.username,
