@@ -140,15 +140,22 @@ Auth.prototype._removeToken = function(done) {
   });
 };
 
-Auth.prototype._authPrep = function(type, data) {
+Auth.prototype._authPrep = function(type) {
   /**
    * type: (basic | oauth)
    */
-  config.github.authenticate({
-    type: type,
-    username: data.username,
-    password: data.password
-  });
+  if (type === 'basic') {
+    config.github.authenticate({
+      type: type,
+      username: this.store.creds.username,
+      password: this.store.creds.password
+    });
+  } else if (type === 'oauth') {
+    config.github.authenticate({
+      type: type,
+      token: this.data.token
+    });
+  }
 };
 
 Auth.prototype._genHeaders = function() {
