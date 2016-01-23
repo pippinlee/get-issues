@@ -75,7 +75,7 @@ function createAuthToken(type, count) {
     console.log('>>> createAuthToken >>> create CB EP');
     if (err) {
       console.log('>>> createAuthToken >>> error true');
-      console.log('>>> createAuthToken >>> count = ', count);
+      console.log('>>> createAuthToken >>> count =', count, 'attempts');
       console.log('>>> createAuthToken >>> error: \n', err);
       var code = err.code;
       var message = JSON.parse(err.message).message;
