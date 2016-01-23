@@ -28,7 +28,7 @@ function createAuthToken(type, count) {
   console.log('>>> createAuthToken >>> EP');
   console.log('>>> createAuthToken >>> TYPE: ', type);
   if (type === 'basic') {
-    inquirer.prompt(config.questions.auth, function(answers) {
+    inquirer.prompt(config.questions.basicAuth, function(answers) {
       console.log('>>> createAuthToken >>> inquirer CB EP');
       console.log('>>> createAuthToken >>> set auth');
       config.github.authenticate({
@@ -47,7 +47,7 @@ function createAuthToken(type, count) {
       }, auth_cb);
     });
   } else {
-    inquirer.prompt(config.questions.twofactor, function(answers) {
+    inquirer.prompt(config.questions.twoFactorAuth, function(answers) {
       console.log('>>> createAuthToken >>> inquirer CB EP');
       console.log('>>> createAuthToken >>> set 2FAuth');
       config.github.authenticate({
