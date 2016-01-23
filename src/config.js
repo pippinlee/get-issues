@@ -24,16 +24,6 @@ function addGitIgnore() {
 };
 
 var config = {
-  genReqObj: function(uri, baseUrl, method) {
-    return {
-      uri: uri || '',
-      baseUrl: baseUrl || 'https://api.github.com',
-      method: method || 'GET',
-      headers: {
-        'User-Agent': 'get-issues'
-      }
-    };
-  },
   checkGitIgnore: function() {
 
     // INFO: check if .gitignore exists
