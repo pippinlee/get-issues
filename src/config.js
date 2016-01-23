@@ -13,7 +13,7 @@ var github = new GitHubApi({
   host: 'api.github.com',
   timeout: 5000,
   headers: {
-    'user-agent': 'get-issues'
+    'User-Agent': 'get-issues'
   }
 });
 
