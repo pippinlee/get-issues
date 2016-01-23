@@ -327,7 +327,7 @@ async.waterfall([
   // INFO: end of waterfall
   function (err, result) {
     if (err) {
-      console.error(err);
+      console.error('>>', 'End of Water', 'error:', err);
       return;
     }
 
