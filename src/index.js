@@ -17,11 +17,13 @@ var slugFactory = require('urlify');
 var scpUrl = require('ssh-url');
 var inquirer = require('inquirer');
 var colors = require('colors');
+var _ = require('lodash');
 
 // INFO: src modules
 var config = require('./config');
 var github = config.github;
 var templates = require('./templates');
+var Auth = require('./auth');
 
 // INFO: set options for slug config
 var slugOptions = {
