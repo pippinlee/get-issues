@@ -99,6 +99,8 @@ Auth.prototype._createCallback = function(error, response) {
     }
   } else {
     // INFO: res.token -> save it
+    console.log('response:', response);
+    this.done();
   }
 };
 
