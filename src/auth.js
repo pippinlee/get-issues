@@ -39,7 +39,7 @@ Auth.prototype.createAuthToken = function() {
 
 Auth.prototype._promptAnswer = function(answers) {
   this.store.creds = (answers) ? answers : this.store.creds;
-  _.bind(this._authPrep, this, 'basic', this.store.creds)();
+  _.bind(this._authPrep, this, 'basic')();
   config.github.authorization.create({
     scopes: [
       "repo",
