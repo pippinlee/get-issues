@@ -41,6 +41,7 @@
     "git-tools": "^0.2.1",
     "github4": "^0.4.0",
     "inquirer": "^0.11.0",
+    "lodash": "^4.0.0",
     "ssh-url": "^0.1.5",
     "urlify": "^0.3.6"
   }
