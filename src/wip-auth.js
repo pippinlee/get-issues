@@ -23,7 +23,8 @@ const colors = require('colors');
 
 
 
-function createAuthToken(count, type) {
+function createAuthToken(type, count) {
+  if (!count) { count = 1; }
   console.log('>>> createAuthToken >>> EP');
   console.log('>>> createAuthToken >>> TYPE: ', type);
   if (type === 'basic') {
