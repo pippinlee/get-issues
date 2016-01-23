@@ -79,12 +79,14 @@ Auth.prototype._createCallback = function(error, response) {
           // INFO: potential memory leak
           async.series([
             _.bind(this._removeToken, this),
-            function(callback) {
-              _.bind(this._promptAnswers, this)(); // calling without params
+            (callback) => {
+              _.bind(this._promptAnswer, this)(); // calling without params
               callback(null);
             }
           ], function(err, results) {
             // INFO: done removing AND adding token
+            console.log('>>', 'createCallback', 'async.series', 'err:', err);
+            console.log('>>', 'createCallback', 'async.series', 'results:', results);
           });
           break;
         default:
@@ -99,22 +101,29 @@ Auth.prototype._createCallback = function(error, response) {
 };
 
 Auth.prototype._removeToken = function(done) {
+  console.log('>>', 'removeToken', 'this:', this);
   config.github.authorization.getAll({
     headers: _.bind(this._genHeaders, this)()
-  }, function(err, authTokens) {
+  }, (err, authTokens) => {
     if (err) {
       console.log('err:', err);
     } else {
       async.filter(
         authTokens,
-        function(token, filter_cb) {
+        (token, filter_cb) => {
           filter_cb(token.app.name === 'get-issues token');
         },
-        function(result) {
+        (result) => {
+          console.log(
+            '>>',
+            'removeToken',
+            'async.filter',
+            'result:', result);
           config.github.authorization.delete({
             id: result[0].id,
             headers: _.bind(this._genHeaders, this)()
-          }, function(err, res) {
+          }, (err, res) => {
+            console.log('delete, this:', this);
             console.log('delete err:', err);
             console.log('delete res:', res);
             done(null);
