@@ -3,8 +3,9 @@
 const config = require('./config');
 const inquirer = require('inquirer');
 const async = require('async');
+const auth = require('./auth');
 
-inquirer.prompt(config.questions.twofactor, function(answers) {
+inquirer.prompt(config.questions.twoFactorAuth, function(answers) {
   config.github.authenticate({
     type: 'basic',
     username: answers.username,
@@ -30,6 +31,8 @@ inquirer.prompt(config.questions.twofactor, function(answers) {
   //     console.log('res: ', res);
   //   }
   // });
+
+
   config.github.authorization.getAll({
     headers: {
       'User-Agent': 'get-issues',
