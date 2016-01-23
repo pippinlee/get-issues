@@ -15,7 +15,8 @@ function Auth(callback) {
       username: null,
       password: null,
       code: null,
-    }
+    },
+    token: null
   };
   this.done = (callback) ? callback : new Function;
 };
