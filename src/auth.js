@@ -66,12 +66,12 @@ Auth.prototype._createCallback = function(error, response) {
           switch (message) {
             case 'Bad credentials':
               console.log(message.cyan);
-              _.bind(this.createAuthToken, this)();
+              return _.bind(this.createAuthToken, this)();
               break;
             case 'Must specify two-factor authentication OTP code.':
               console.log(message.cyan);
               this.store.authType = '2FA';
-              _.bind(this.createAuthToken, this)();
+              return _.bind(this.createAuthToken, this)();
               break;
             default:
               break;
