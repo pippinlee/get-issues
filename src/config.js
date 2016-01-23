@@ -68,6 +68,23 @@ var config = {
         name: 'password',
         message: 'GitHub Password'
       }
+    ],
+    twofactor: [
+      {
+        type: 'input',
+        name: 'username',
+        message: 'GitHub Username'
+      },
+      {
+        type: 'password',
+        name: 'password',
+        message: 'GitHub Password'
+      },
+      {
+        type: 'input',
+        name: 'code',
+        message: 'Enter 2FA Code'
+      }
     ]
   },
   curRepoInfo: {
