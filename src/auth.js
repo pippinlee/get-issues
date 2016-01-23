@@ -119,7 +119,7 @@ Auth.prototype._saveToken = function(){
         console.log('>>', 'saveToken', 'error:', error);
       } else {
         _.bind(this._authPrep, this, 'oauth');
-        this.done(null);
+        return this.done(null);
       }
   });
 };
