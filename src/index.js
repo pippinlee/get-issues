@@ -21,7 +21,6 @@ var _ = require('lodash');
 
 // INFO: src modules
 var config = require('./config');
-var github = config.github;
 var templates = require('./templates');
 var Auth = require('./auth');
 
